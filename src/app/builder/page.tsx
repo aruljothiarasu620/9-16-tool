@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { Suspense, useCallback, useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ReactFlow, {
   Background,
@@ -475,7 +475,7 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
   );
 }
 
-export default function BuilderPage() {
+function BuilderPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const scenarioId = searchParams.get('id');
@@ -510,5 +510,13 @@ export default function BuilderPage() {
     <ReactFlowProvider>
       <BuilderCanvas scenarioId={scenarioId} />
     </ReactFlowProvider>
+  );
+}
+
+export default function BuilderPage() {
+  return (
+    <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text-muted)' }}>Loading...</div>}>
+      <BuilderPageContent />
+    </Suspense>
   );
 }

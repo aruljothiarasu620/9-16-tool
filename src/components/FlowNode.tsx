@@ -57,7 +57,7 @@ export default function FlowNode({ data, selected }: NodeProps<FlowNodeData>) {
 
       {/* Body - show key config */}
       <div className="flow-node-body">
-        {data.type === 'schedule' && data.config.interval && (
+        {data.type === 'schedule' && Boolean(data.config.interval) && (
           <span>🕐 {data.config.interval as string} @ {(data.config.time as string) || '09:00'}</span>
         )}
         {data.type === 'webhook' && (
