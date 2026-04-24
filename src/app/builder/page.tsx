@@ -291,13 +291,71 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
           break;
         }
       } else if (module.type === 'carousel_post') {
+        const accountId = module.config.accountId as string;
+        const activeAccount = accountId ? instagramAccounts.find(a => a.id === accountId) : instagramAccounts[0];
+        
+        if (!activeAccount) {
+          addLog(`❌ ${meta.label}: No Instagram account selected or connected.`, 'error');
+          success = false;
+          break;
+        }
+
         const imgs = (module.config.images as string[]) || [];
-        if (imgs.filter(Boolean).length === 0) {
+        const validImgs = imgs.filter(Boolean);
+        const caption = module.config.caption as string || '';
+        const timing = module.config.postTiming as string || 'now';
+
+        if (validImgs.length === 0) {
           addLog(`✗ ${meta.label}: No images provided`, 'error');
           success = false;
           break;
         }
-        addLog(`✓ ${meta.label} completed successfully (Mock)`, 'success');
+
+        if (timing === 'schedule') {
+           const scheduleTime = module.config.scheduleTime as string;
+           if (!scheduleTime) {
+             addLog(`❌ ${meta.label}: Scheduled post selected but no date/time provided.`, 'error');
+             success = false;
+             break;
+           }
+           addLog(`⏰ ${meta.label}: Carousel successfully scheduled for ${new Date(scheduleTime).toLocaleString()}`, 'success');
+           continue;
+        }
+
+        try {
+          addLog(`⏳ Uploading ${validImgs.length} images for Carousel...`, 'info');
+          const childrenIds = [];
+
+          // 1. Create individual item containers
+          for (let i = 0; i < validImgs.length; i++) {
+            const itemRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media?image_url=${encodeURIComponent(validImgs[i])}&is_carousel_item=true&access_token=${activeAccount.accessToken}`, { method: 'POST' });
+            const itemData = await itemRes.json();
+            if (itemData.error) throw new Error(`Image ${i+1}: ${itemData.error.message}`);
+            childrenIds.push(itemData.id);
+          }
+
+          addLog(`⏳ Creating parent carousel container...`, 'info');
+          
+          // 2. Create parent container
+          const carouselRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media?media_type=CAROUSEL&children=${childrenIds.join(',')}&caption=${encodeURIComponent(caption)}&access_token=${activeAccount.accessToken}`, { method: 'POST' });
+          const carouselData = await carouselRes.json();
+          if (carouselData.error) throw new Error(`Carousel Container: ${carouselData.error.message}`);
+          
+          const creationId = carouselData.id;
+          addLog(`⏳ Publishing Carousel...`, 'info');
+          
+          // 3. Publish Media
+          const publishRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media_publish?creation_id=${creationId}&access_token=${activeAccount.accessToken}`, { method: 'POST' });
+          const publishData = await publishRes.json();
+          
+          if (publishData.error) throw new Error(publishData.error.message);
+          
+          addLog(`✓ ${meta.label} successfully posted! ID: ${publishData.id}`, 'success');
+        } catch (err: any) {
+          addLog(`✗ ${meta.label} Failed: ${err.message}`, 'error');
+          success = false;
+          break;
+        }
       } else {
         await new Promise((r) => setTimeout(r, 700));
         addLog(`✓ ${meta.label} completed successfully`, 'success');
