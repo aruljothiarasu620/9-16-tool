@@ -143,6 +143,41 @@ function AccountSelector({ config, set }: { config: Record<string, unknown>; set
   );
 }
 
+function PostTimingSelector({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
+  const postTiming = (config.postTiming as string) || 'now';
+  
+  return (
+    <>
+      <Field label="Publish Options">
+        <div style={{ display: 'flex', gap: '16px', background: 'var(--bg-primary)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: postTiming === 'now' ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+            <input type="radio" name={`timing_${Math.random()}`} value="now" 
+              checked={postTiming === 'now'} 
+              onChange={() => set('postTiming', 'now')} 
+              style={{ accentColor: 'var(--accent)' }} />
+            🚀 Post Now
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: postTiming === 'schedule' ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+            <input type="radio" name={`timing_${Math.random()}`} value="schedule" 
+              checked={postTiming === 'schedule'} 
+              onChange={() => set('postTiming', 'schedule')}
+              style={{ accentColor: 'var(--accent)' }} />
+            ⏰ Schedule
+          </label>
+        </div>
+      </Field>
+      
+      {postTiming === 'schedule' && (
+        <Field label="Schedule Date & Time">
+          <input type="datetime-local" className="input"
+            value={(config.scheduleTime as string) || ''}
+            onChange={(e) => set('scheduleTime', e.target.value)} />
+        </Field>
+      )}
+    </>
+  );
+}
+
 function ScheduleConfig({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
   return (
     <>
@@ -248,11 +283,7 @@ function CarouselConfig({ config, set }: { config: Record<string, unknown>; set:
         )}
       </Field>
       <CaptionHashtagFields config={config} set={set} />
-      <Field label="Schedule Time">
-        <input type="datetime-local" className="input"
-          value={(config.scheduleTime as string) || ''}
-          onChange={(e) => set('scheduleTime', e.target.value)} />
-      </Field>
+      <PostTimingSelector config={config} set={set} />
     </>
   );
 }
@@ -267,6 +298,7 @@ function SinglePostConfig({ config, set }: { config: Record<string, unknown>; se
           onChange={(e) => set('imageUrl', e.target.value)} />
       </Field>
       <CaptionHashtagFields config={config} set={set} />
+      <PostTimingSelector config={config} set={set} />
     </>
   );
 }
@@ -301,6 +333,7 @@ function ReelConfig({ config, set }: { config: Record<string, unknown>; set: (k:
           <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Share to Feed</span>
         </label>
       </Field>
+      <PostTimingSelector config={config} set={set} />
     </>
   );
 }

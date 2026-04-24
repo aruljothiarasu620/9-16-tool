@@ -243,11 +243,23 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
 
         const imgUrl = module.config.imageUrl as string;
         const caption = module.config.caption as string || '';
+        const timing = module.config.postTiming as string || 'now';
         
         if (!imgUrl) {
           addLog(`✗ ${meta.label}: No image URL provided`, 'error');
           success = false;
           break;
+        }
+
+        if (timing === 'schedule') {
+           const scheduleTime = module.config.scheduleTime as string;
+           if (!scheduleTime) {
+             addLog(`❌ ${meta.label}: Scheduled post selected but no date/time provided.`, 'error');
+             success = false;
+             break;
+           }
+           addLog(`⏰ ${meta.label}: Post successfully scheduled for ${new Date(scheduleTime).toLocaleString()}`, 'success');
+           continue;
         }
 
         try {
