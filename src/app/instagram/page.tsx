@@ -4,16 +4,8 @@ import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { generateId } from '@/lib/utils';
 
-declare global {
-  interface Window {
-    FB: {
-      init: (config: object) => void;
-      login: (callback: (response: { authResponse?: { accessToken: string } }) => void, options: object) => void;
-      api: (path: string, callback: (response: Record<string, unknown>) => void) => void;
-    };
-    fbAsyncInit: () => void;
-  }
-}
+// FB SDK declarations removed as we are using manual OAuth flow
+
 
 export default function InstagramPage() {
   const { instagramAccounts, addInstagramAccount, removeInstagramAccount, settings } = useStore();
@@ -28,67 +20,80 @@ export default function InstagramPage() {
   const appId = settings.facebookAppId || '2001458060448073';
 
   useEffect(() => {
-    if (!appId) return;
-
-    // Load the Facebook SDK
-    if (document.getElementById('facebook-sdk')) {
-      setSdkLoaded(true);
-      return;
-    }
-
-    window.fbAsyncInit = () => {
-      window.FB.init({
-        appId,
-        cookie: true,
-        xfbml: true,
-        version: 'v18.0',
-      });
-      setSdkLoaded(true);
-    };
-
-    const script = document.createElement('script');
-    script.id = 'facebook-sdk';
-    script.src = 'https://connect.facebook.net/en_US/sdk.js';
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-  }, [appId]);
-
-  const handleFBLogin = () => {
-    if (!sdkLoaded || !window.FB) {
-      setError('Facebook SDK not loaded. Please ensure App ID is configured in Settings.');
-      return;
-    }
-    setIsConnecting(true);
-    setError('');
-
-    window.FB.login(
-      (response) => {
-        if (response.authResponse) {
-          const token = response.authResponse.accessToken;
-          // Fetch user info
-          window.FB.api('/me?fields=name,picture,instagram_business_account{name,followers_count,profile_picture_url,username}', (data) => {
-            const igAccount = (data.instagram_business_account as Record<string, unknown>) || {};
-            addInstagramAccount({
-              id: generateId(),
-              username: (igAccount.username as string) || (data.name as string) || 'Unknown',
-              profilePicture: ((igAccount.profile_picture_url as string) || (data.picture as { data: { url: string } })?.data?.url) || '',
-              followerCount: (igAccount.followers_count as number) || 0,
-              accessToken: token,
-              pageId: (data.id as string) || '',
-              connectedAt: new Date().toISOString(),
-            });
+    if (typeof window === 'undefined') return;
+    
+    // Check if we just returned from Facebook OAuth
+    const hash = window.location.hash;
+    if (hash && (hash.includes('access_token=') || hash.includes('long_lived_token='))) {
+      setIsConnecting(true);
+      setError('');
+      
+      const params = new URLSearchParams(hash.substring(1));
+      const token = params.get('long_lived_token') || params.get('access_token');
+      
+      if (token) {
+        // Clean up the URL
+        window.history.replaceState(null, '', window.location.pathname);
+        
+        // Fetch the user's pages and connected Instagram accounts
+        fetch(`https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,instagram_business_account{name,followers_count,profile_picture_url,username}&access_token=${token}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.error) {
+              setError(data.error.message);
+              setIsConnecting(false);
+              return;
+            }
+            
+            if (data.data && data.data.length > 0) {
+              let foundIg = false;
+              data.data.forEach((page: any) => {
+                if (page.instagram_business_account) {
+                   foundIg = true;
+                   const igAccount = page.instagram_business_account;
+                   addInstagramAccount({
+                      id: generateId(),
+                      username: igAccount.username || page.name || 'Unknown',
+                      profilePicture: igAccount.profile_picture_url || '',
+                      followerCount: igAccount.followers_count || 0,
+                      accessToken: page.access_token || token, // Required for publishing
+                      pageId: page.id,
+                      connectedAt: new Date().toISOString(),
+                    });
+                }
+              });
+              if (!foundIg) {
+                setError("No connected Instagram Professional accounts found on your Facebook Pages. Make sure they are linked.");
+              }
+            } else {
+               setError("No Facebook Pages found. You must create a Facebook Page and link it to your Instagram Business account.");
+            }
+            setIsConnecting(false);
+          })
+          .catch(err => {
+            console.error('Fetch error:', err);
+            setError('Failed to fetch account data from Facebook.');
             setIsConnecting(false);
           });
-        } else {
-          setError('Login was cancelled or failed.');
-          setIsConnecting(false);
-        }
-      },
-      {
-        scope: 'instagram_basic,instagram_content_publish,pages_read_engagement,pages_manage_posts',
       }
-    );
+    }
+  }, [addInstagramAccount]);
+
+  const handleFBLogin = () => {
+    if (!appId) {
+      setError('Facebook App ID is missing.');
+      return;
+    }
+    
+    setIsConnecting(true);
+    
+    const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/instagram` : 'https://makecom-azure.vercel.app/instagram';
+    const scope = 'instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,pages_show_list,pages_read_engagement,business_management';
+    const extras = JSON.stringify({"setup":{"channel":"IG_API_ONBOARDING"}});
+    
+    const authUrl = `https://www.facebook.com/dialog/oauth?client_id=${appId}&display=page&extras=${encodeURIComponent(extras)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}`;
+    
+    window.location.href = authUrl;
   };
 
   const handleManualConnect = () => {
