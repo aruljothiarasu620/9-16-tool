@@ -38,7 +38,7 @@ const categories = ['Triggers', 'Actions', 'Logic'];
 
 function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
   const router = useRouter();
-  const { scenarios, updateScenario, addModule, updateModule, removeModule, addConnection, removeConnection, addRunLog } = useStore();
+  const { scenarios, updateScenario, addModule, updateModule, removeModule, addConnection, removeConnection, addRunLog, instagramAccounts } = useStore();
   const scenario = scenarios.find((s) => s.id === scenarioId);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
