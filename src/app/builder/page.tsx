@@ -99,33 +99,6 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
     setSelectedModuleId(null);
   }, []);
 
-  const addNodeToCanvas = useCallback((type: ModuleType) => {
-    const meta = MODULE_CONFIG[type];
-    const position = {
-      x: 250 + Math.random() * 50,
-      y: 150 + Math.random() * 50,
-    };
-
-    const newModule: Module = {
-      id: generateId(),
-      type,
-      label: meta.label,
-      position,
-      config: {},
-    };
-
-    addModule(scenarioId, newModule);
-    setNodes((nds) => [
-      ...nds,
-      {
-        id: newModule.id,
-        type: 'customNode',
-        position,
-        data: { type, label: meta.label, config: {}, selected: false },
-      },
-    ]);
-  }, [addModule, scenarioId, setNodes]);
-
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
@@ -165,6 +138,36 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
+
+  const handleModuleClick = useCallback(
+    (type: ModuleType) => {
+      const meta = MODULE_CONFIG[type];
+      
+      // Calculate a center position with a slight offset based on existing nodes
+      const offset = nodes.length * 20;
+      const position = { x: 250 + offset, y: 150 + offset };
+
+      const newModule: Module = {
+        id: generateId(),
+        type,
+        label: meta.label,
+        position,
+        config: {},
+      };
+
+      addModule(scenarioId, newModule);
+      setNodes((nds) => [
+        ...nds,
+        {
+          id: newModule.id,
+          type: 'customNode',
+          position,
+          data: { type, label: meta.label, config: {}, selected: false },
+        },
+      ]);
+    },
+    [addModule, scenarioId, setNodes, nodes.length]
+  );
 
   const handleNodesChange = useCallback(
     (changes: Parameters<typeof onNodesChange>[0]) => {
@@ -390,7 +393,7 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
                     className="module-chip"
                     style={{ marginBottom: '6px', cursor: 'pointer' }}
                     draggable
-                    onClick={() => addNodeToCanvas(type)}
+                    onClick={() => handleModuleClick(type)}
                     onDragStart={(e) => {
                       e.dataTransfer.setData('moduleType', type);
                       e.dataTransfer.effectAllowed = 'move';
