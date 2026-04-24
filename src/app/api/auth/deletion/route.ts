@@ -5,6 +5,13 @@ import { NextResponse } from 'next/server';
  * This endpoint is required by Meta to allow users to request deletion of their data.
  * When a user removes the app from their Facebook settings, Meta pings this URL.
  */
+export async function GET() {
+  return NextResponse.json({
+    status: 'active',
+    message: 'InstaFlow Data Deletion Endpoint is live. Meta should use POST to request deletion.'
+  });
+}
+
 export async function POST(request: Request) {
   try {
     // Meta sends a signed_request in the POST body
