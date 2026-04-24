@@ -25,7 +25,7 @@ export default function InstagramPage() {
   const [manualUsername, setManualUsername] = useState('');
   const [manualFollowers, setManualFollowers] = useState('');
 
-  const appId = settings.facebookAppId;
+  const appId = settings.facebookAppId || '2001458060448073';
 
   useEffect(() => {
     if (!appId) return;
