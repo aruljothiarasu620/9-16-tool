@@ -88,7 +88,7 @@ export default function InstagramPage() {
     setIsConnecting(true);
     
     const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/instagram` : 'https://makecom-azure.vercel.app/instagram';
-    const scope = 'instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,pages_show_list,pages_read_engagement,business_management';
+    const scope = 'instagram_basic,instagram_content_publish,instagram_manage_comments,pages_show_list,pages_read_engagement,business_management';
     const extras = JSON.stringify({"setup":{"channel":"IG_API_ONBOARDING"}});
     
     const authUrl = `https://www.facebook.com/dialog/oauth?client_id=${appId}&display=page&extras=${encodeURIComponent(extras)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}`;
