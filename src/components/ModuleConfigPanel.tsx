@@ -1,6 +1,6 @@
 'use client';
 
-import { Module } from '@/lib/store';
+import { useStore, Module } from '@/lib/store';
 import { MODULE_CONFIG } from '@/lib/utils';
 import { useState } from 'react';
 
@@ -121,6 +121,28 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function AccountSelector({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
+  const { instagramAccounts } = useStore();
+  
+  return (
+    <Field label="Instagram Account *">
+      <select 
+        className="input" 
+        value={(config.accountId as string) || ''}
+        onChange={(e) => set('accountId', e.target.value)}
+        style={{ background: 'var(--bg-primary)' }}
+      >
+        <option value="" disabled>Select an account...</option>
+        {instagramAccounts.map(acc => (
+          <option key={acc.id} value={acc.id}>
+            @{acc.username}
+          </option>
+        ))}
+      </select>
+    </Field>
+  );
+}
+
 function ScheduleConfig({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
   return (
     <>
@@ -203,6 +225,7 @@ function CarouselConfig({ config, set }: { config: Record<string, unknown>; set:
   };
   return (
     <>
+      <AccountSelector config={config} set={set} />
       <Field label={`Images (${images.length}/10)`}>
         {images.map((img, i) => (
           <div key={i} style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
@@ -237,6 +260,7 @@ function CarouselConfig({ config, set }: { config: Record<string, unknown>; set:
 function SinglePostConfig({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
   return (
     <>
+      <AccountSelector config={config} set={set} />
       <Field label="Image URL">
         <input className="input" placeholder="https://example.com/image.jpg"
           value={(config.imageUrl as string) || ''}
@@ -250,6 +274,7 @@ function SinglePostConfig({ config, set }: { config: Record<string, unknown>; se
 function ReelConfig({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
   return (
     <>
+      <AccountSelector config={config} set={set} />
       <Field label="Video URL">
         <input className="input" placeholder="https://example.com/reel.mp4"
           value={(config.videoUrl as string) || ''}

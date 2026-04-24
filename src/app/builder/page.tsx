@@ -226,19 +226,21 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
     const executedModules: string[] = [];
     let success = true;
 
-    const activeAccount = instagramAccounts[0];
-    if (!activeAccount) {
-      addLog('❌ No Instagram account connected. Please connect one first.', 'error');
-      setIsRunning(false);
-      return;
-    }
-
     for (const module of scenario.modules) {
       const meta = MODULE_CONFIG[module.type];
       addLog(`⚙ Executing: ${meta.label}`, 'info');
       executedModules.push(meta.label);
 
       if (module.type === 'single_post') {
+        const accountId = module.config.accountId as string;
+        const activeAccount = accountId ? instagramAccounts.find(a => a.id === accountId) : instagramAccounts[0];
+        
+        if (!activeAccount) {
+          addLog(`❌ ${meta.label}: No Instagram account selected or connected.`, 'error');
+          success = false;
+          break;
+        }
+
         const imgUrl = module.config.imageUrl as string;
         const caption = module.config.caption as string || '';
         
