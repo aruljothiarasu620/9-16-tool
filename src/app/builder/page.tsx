@@ -99,6 +99,33 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
     setSelectedModuleId(null);
   }, []);
 
+  const addNodeToCanvas = useCallback((type: ModuleType) => {
+    const meta = MODULE_CONFIG[type];
+    const position = {
+      x: 250 + Math.random() * 50,
+      y: 150 + Math.random() * 50,
+    };
+
+    const newModule: Module = {
+      id: generateId(),
+      type,
+      label: meta.label,
+      position,
+      config: {},
+    };
+
+    addModule(scenarioId, newModule);
+    setNodes((nds) => [
+      ...nds,
+      {
+        id: newModule.id,
+        type: 'customNode',
+        position,
+        data: { type, label: meta.label, config: {}, selected: false },
+      },
+    ]);
+  }, [addModule, scenarioId, setNodes]);
+
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
@@ -361,8 +388,9 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
                   <div
                     key={type}
                     className="module-chip"
-                    style={{ marginBottom: '6px' }}
+                    style={{ marginBottom: '6px', cursor: 'pointer' }}
                     draggable
+                    onClick={() => addNodeToCanvas(type)}
                     onDragStart={(e) => {
                       e.dataTransfer.setData('moduleType', type);
                       e.dataTransfer.effectAllowed = 'move';
