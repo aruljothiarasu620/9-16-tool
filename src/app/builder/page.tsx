@@ -342,6 +342,11 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
           if (carouselData.error) throw new Error(`Carousel Container: ${carouselData.error.message}`);
           
           const creationId = carouselData.id;
+          addLog(`⏳ Processing Carousel (Meta requires ~10 seconds)...`, 'info');
+          
+          // Wait 12 seconds for Meta to finish processing the container
+          await new Promise(resolve => setTimeout(resolve, 12000));
+          
           addLog(`⏳ Publishing Carousel...`, 'info');
           
           // 3. Publish Media
