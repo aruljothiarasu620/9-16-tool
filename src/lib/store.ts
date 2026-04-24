@@ -167,8 +167,8 @@ export const useStore = create<AppStore>()(
       instagramAccounts: [],
       activeScenarioId: null,
       settings: {
-        facebookAppId: '',
-        facebookAppSecret: '',
+        facebookAppId: '2001458060448073',
+        facebookAppSecret: 'fff9231ce808e506def32a87c8cef303',
         notifyOnSuccess: true,
         notifyOnFailure: true,
         notifyEmail: '',

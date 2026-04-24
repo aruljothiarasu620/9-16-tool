@@ -73,13 +73,16 @@ export default function Sidebar() {
       <div style={{ marginTop: 'auto', padding: '16px 8px 0', borderTop: '1px solid var(--border)' }}>
         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
           {instagramAccounts.length > 0 ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <span className="status-dot active" />
               <span>{instagramAccounts[0].username}</span>
             </div>
           ) : (
-            <span>No account connected</span>
+            <div style={{ marginBottom: '8px' }}>No account connected</div>
           )}
+          <Link href="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none', opacity: 0.7, fontSize: '11px' }}>
+            Privacy Policy
+          </Link>
         </div>
       </div>
     </aside>

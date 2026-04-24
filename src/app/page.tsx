@@ -279,6 +279,12 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+      {/* Footer */}
+      <footer style={{ marginTop: '60px', padding: '24px 0', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+          © 2026 InstaFlow Automation Builder · <Link href="/privacy" style={{ color: 'var(--accent-light)', textDecoration: 'none' }}>Privacy Policy</Link>
+        </p>
+      </footer>
     </div>
   );
 }
