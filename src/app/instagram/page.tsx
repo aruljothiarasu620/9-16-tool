@@ -57,7 +57,7 @@ export default function InstagramPage() {
                       profilePicture: igAccount.profile_picture_url || '',
                       followerCount: igAccount.followers_count || 0,
                       accessToken: page.access_token || token, // Required for publishing
-                      pageId: page.id,
+                      pageId: igAccount.id, // MUST be the IG account ID, not FB Page ID
                       connectedAt: new Date().toISOString(),
                     });
                 }

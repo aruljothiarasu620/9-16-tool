@@ -196,28 +196,68 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
     const executedModules: string[] = [];
     let success = true;
 
+    const activeAccount = instagramAccounts[0];
+    if (!activeAccount) {
+      addLog('❌ No Instagram account connected. Please connect one first.', 'error');
+      setIsRunning(false);
+      return;
+    }
+
     for (const module of scenario.modules) {
       const meta = MODULE_CONFIG[module.type];
       addLog(`⚙ Executing: ${meta.label}`, 'info');
       executedModules.push(meta.label);
 
-      await new Promise((r) => setTimeout(r, 700));
+      if (module.type === 'single_post') {
+        const imgUrl = module.config.imageUrl as string;
+        const caption = module.config.caption as string || '';
+        
+        if (!imgUrl) {
+          addLog(`✗ ${meta.label}: No image URL provided`, 'error');
+          success = false;
+          break;
+        }
 
-      if (module.type === 'single_post' && !module.config.imageUrl) {
-        addLog(`✗ ${meta.label}: No image URL provided`, 'error');
-        success = false;
-        break;
-      }
-      if (module.type === 'carousel_post') {
+        try {
+          addLog(`⏳ Uploading image to Instagram...`, 'info');
+          
+          // 1. Create Media Container
+          const createRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media?image_url=${encodeURIComponent(imgUrl)}&caption=${encodeURIComponent(caption)}&access_token=${activeAccount.accessToken}`, { method: 'POST' });
+          const createData = await createRes.json();
+          
+          if (createData.error) {
+             throw new Error(createData.error.message);
+          }
+          
+          const creationId = createData.id;
+          addLog(`⏳ Publishing post...`, 'info');
+          
+          // 2. Publish Media
+          const publishRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media_publish?creation_id=${creationId}&access_token=${activeAccount.accessToken}`, { method: 'POST' });
+          const publishData = await publishRes.json();
+          
+          if (publishData.error) {
+             throw new Error(publishData.error.message);
+          }
+          
+          addLog(`✓ ${meta.label} successfully posted! ID: ${publishData.id}`, 'success');
+        } catch (err: any) {
+          addLog(`✗ ${meta.label} Failed: ${err.message}`, 'error');
+          success = false;
+          break;
+        }
+      } else if (module.type === 'carousel_post') {
         const imgs = (module.config.images as string[]) || [];
         if (imgs.filter(Boolean).length === 0) {
           addLog(`✗ ${meta.label}: No images provided`, 'error');
           success = false;
           break;
         }
+        addLog(`✓ ${meta.label} completed successfully (Mock)`, 'success');
+      } else {
+        await new Promise((r) => setTimeout(r, 700));
+        addLog(`✓ ${meta.label} completed successfully`, 'success');
       }
-
-      addLog(`✓ ${meta.label} completed successfully`, 'success');
     }
 
     const now = new Date().toISOString();
