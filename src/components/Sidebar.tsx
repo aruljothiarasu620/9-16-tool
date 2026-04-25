@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { useEffect, useState } from 'react';
-import { auth, loginWithGoogle, logoutUser } from '@/lib/firebase';
+import { auth, loginWithGoogle, logoutUser, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: '⚡' },
@@ -16,15 +17,42 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { instagramAccounts } = useStore();
+  const store = useStore();
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
 
+  // 1. Listen to Auth Changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
+      if (user) {
+        // Fetch their cloud data
+        const docRef = doc(db, 'users', user.uid);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          useStore.setState({ instagramAccounts: data.instagramAccounts || [], scenarios: data.scenarios || [] });
+        } else {
+          // First time logging in: save their current local data to the cloud
+          await setDoc(docRef, { instagramAccounts: store.instagramAccounts, scenarios: store.scenarios });
+        }
+      } else {
+        // Logged out: Clear their sensitive data from the screen
+        useStore.setState({ instagramAccounts: [], scenarios: [] });
+      }
     });
     return () => unsubscribe();
-  }, []);
+  }, []); // Only run once on mount
+
+  // 2. Auto-Save to Cloud when they make changes
+  useEffect(() => {
+    if (firebaseUser) {
+      const timer = setTimeout(() => {
+        const docRef = doc(db, 'users', firebaseUser.uid);
+        setDoc(docRef, { instagramAccounts: store.instagramAccounts, scenarios: store.scenarios }, { merge: true });
+      }, 1000); // Debounce to avoid spamming the database
+      return () => clearTimeout(timer);
+    }
+  }, [store.instagramAccounts, store.scenarios, firebaseUser]);
 
   return (
     <aside style={{
@@ -68,7 +96,7 @@ export default function Sidebar() {
           >
             <span>{item.icon}</span>
             <span>{item.label}</span>
-            {item.href === '/instagram' && instagramAccounts.length > 0 && (
+            {item.href === '/instagram' && store.instagramAccounts.length > 0 && (
               <span style={{
                 marginLeft: 'auto',
                 background: 'var(--success)',
@@ -103,10 +131,10 @@ export default function Sidebar() {
         )}
 
         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-          {instagramAccounts.length > 0 ? (
+          {store.instagramAccounts.length > 0 ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <span className="status-dot active" />
-              <span>{instagramAccounts[0].username}</span>
+              <span>{store.instagramAccounts[0].username}</span>
             </div>
           ) : (
             <div style={{ marginBottom: '8px' }}>No account connected</div>
