@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { saveUserDataToCloud } from '@/lib/firebase';
 
 export type ModuleType =
   | 'schedule'
@@ -173,34 +174,42 @@ export const useStore = create<AppStore>()(
     },
 
     addScenario: (scenario) =>
-      set((state) => ({ scenarios: [...state.scenarios, scenario] })),
+      set((state) => {
+        const nextScenarios = [...state.scenarios, scenario];
+        saveUserDataToCloud({ scenarios: nextScenarios });
+        return { scenarios: nextScenarios };
+      }),
 
     updateScenario: (id, updates) =>
-      set((state) => ({
-        scenarios: state.scenarios.map((s) =>
+      set((state) => {
+        const nextScenarios = state.scenarios.map((s) =>
           s.id === id ? { ...s, ...updates } : s
-        ),
-      })),
+        );
+        saveUserDataToCloud({ scenarios: nextScenarios });
+        return { scenarios: nextScenarios };
+      }),
 
     deleteScenario: (id) =>
-      set((state) => ({
-        scenarios: state.scenarios.filter((s) => s.id !== id),
-      })),
+      set((state) => {
+        const nextScenarios = state.scenarios.filter((s) => s.id !== id);
+        saveUserDataToCloud({ scenarios: nextScenarios });
+        return { scenarios: nextScenarios };
+      }),
 
     setActiveScenario: (id) => set({ activeScenarioId: id }),
 
     addModule: (scenarioId, module) =>
-      set((state) => ({
-        scenarios: state.scenarios.map((s) =>
-          s.id === scenarioId
-            ? { ...s, modules: [...s.modules, module] }
-            : s
-        ),
-      })),
+      set((state) => {
+        const nextScenarios = state.scenarios.map((s) =>
+          s.id === scenarioId ? { ...s, modules: [...s.modules, module] } : s
+        );
+        saveUserDataToCloud({ scenarios: nextScenarios });
+        return { scenarios: nextScenarios };
+      }),
 
     updateModule: (scenarioId, moduleId, config) =>
-      set((state) => ({
-        scenarios: state.scenarios.map((s) =>
+      set((state) => {
+        const nextScenarios = state.scenarios.map((s) =>
           s.id === scenarioId
             ? {
                 ...s,
@@ -209,12 +218,14 @@ export const useStore = create<AppStore>()(
                 ),
               }
             : s
-        ),
-      })),
+        );
+        saveUserDataToCloud({ scenarios: nextScenarios });
+        return { scenarios: nextScenarios };
+      }),
 
     removeModule: (scenarioId, moduleId) =>
-      set((state) => ({
-        scenarios: state.scenarios.map((s) =>
+      set((state) => {
+        const nextScenarios = state.scenarios.map((s) =>
           s.id === scenarioId
             ? {
                 ...s,
@@ -224,12 +235,14 @@ export const useStore = create<AppStore>()(
                 ),
               }
             : s
-        ),
-      })),
+        );
+        saveUserDataToCloud({ scenarios: nextScenarios });
+        return { scenarios: nextScenarios };
+      }),
 
     updateModulePosition: (scenarioId, moduleId, position) =>
-      set((state) => ({
-        scenarios: state.scenarios.map((s) =>
+      set((state) => {
+        const nextScenarios = state.scenarios.map((s) =>
           s.id === scenarioId
             ? {
                 ...s,
@@ -238,41 +251,49 @@ export const useStore = create<AppStore>()(
                 ),
               }
             : s
-        ),
-      })),
+        );
+        saveUserDataToCloud({ scenarios: nextScenarios });
+        return { scenarios: nextScenarios };
+      }),
 
     addConnection: (scenarioId, connection) =>
-      set((state) => ({
-        scenarios: state.scenarios.map((s) =>
+      set((state) => {
+        const nextScenarios = state.scenarios.map((s) =>
           s.id === scenarioId
             ? { ...s, connections: [...s.connections, connection] }
             : s
-        ),
-      })),
+        );
+        saveUserDataToCloud({ scenarios: nextScenarios });
+        return { scenarios: nextScenarios };
+      }),
 
     removeConnection: (scenarioId, connectionId) =>
-      set((state) => ({
-        scenarios: state.scenarios.map((s) =>
+      set((state) => {
+        const nextScenarios = state.scenarios.map((s) =>
           s.id === scenarioId
             ? {
                 ...s,
-                connections: s.connections.filter(
-                  (c) => c.id !== connectionId
-                ),
+                connections: s.connections.filter((c) => c.id !== connectionId),
               }
             : s
-        ),
-      })),
+        );
+        saveUserDataToCloud({ scenarios: nextScenarios });
+        return { scenarios: nextScenarios };
+      }),
 
     addRunLog: (log) =>
-      set((state) => ({
-        runLogs: [log, ...state.runLogs].slice(0, 50),
-      })),
+      set((state) => {
+        const nextLogs = [log, ...state.runLogs].slice(0, 50);
+        saveUserDataToCloud({ runLogs: nextLogs });
+        return { runLogs: nextLogs };
+      }),
 
     clearRunLogs: (scenarioId) =>
-      set((state) => ({
-        runLogs: state.runLogs.filter((l) => l.scenarioId !== scenarioId),
-      })),
+      set((state) => {
+        const nextLogs = state.runLogs.filter((l) => l.scenarioId !== scenarioId);
+        saveUserDataToCloud({ runLogs: nextLogs });
+        return { runLogs: nextLogs };
+      }),
 
     addInstagramAccount: (account) =>
       set((state) => ({

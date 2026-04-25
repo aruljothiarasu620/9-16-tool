@@ -41,6 +41,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
               useStore.setState({
                 instagramAccounts: data.instagramAccounts || [],
                 scenarios: data.scenarios || [],
+                runLogs: data.runLogs || [],
               });
             }
           } catch (err) {
@@ -58,7 +59,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       } else {
         // Logged out — clear store and reset the loaded flag
         firestoreLoadedForUid = null;
-        useStore.setState({ instagramAccounts: [], scenarios: [] });
+        useStore.setState({ instagramAccounts: [], scenarios: [], runLogs: [] });
       }
 
       setLoading(false);

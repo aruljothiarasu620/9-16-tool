@@ -17,15 +17,16 @@ export default function DashboardPage() {
 
   const handleCreate = () => {
     if (!newName.trim()) return;
-    addScenario({
+    const newScenario = {
       id: generateId(),
       name: newName.trim(),
-      status: 'inactive',
+      status: 'inactive' as const,
       lastRun: null,
       modules: [],
       connections: [],
       createdAt: new Date().toISOString(),
-    });
+    };
+    addScenario(newScenario);
     setNewName('');
     setShowCreate(false);
   };
@@ -146,11 +147,10 @@ export default function DashboardPage() {
                       <input
                         type="checkbox"
                         checked={scenario.status === 'active'}
-                        onChange={(e) =>
-                          updateScenario(scenario.id, {
-                            status: e.target.checked ? 'active' : 'inactive',
-                          })
-                        }
+                        onChange={(e) => {
+                          const newStatus = e.target.checked ? 'active' : 'inactive';
+                          updateScenario(scenario.id, { status: newStatus });
+                        }}
                       />
                       <span className="toggle-slider" />
                     </label>
@@ -269,7 +269,10 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
                 style={{ flex: 1, padding: '10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer', fontWeight: 600 }}
-                onClick={() => { deleteScenario(deleteConfirm!); setDeleteConfirm(null); }}>
+                onClick={() => { 
+                  deleteScenario(deleteConfirm!); 
+                  setDeleteConfirm(null); 
+                }}>
                 Delete
               </button>
               <button className="btn-secondary" onClick={() => setDeleteConfirm(null)} style={{ flex: 1 }}>
