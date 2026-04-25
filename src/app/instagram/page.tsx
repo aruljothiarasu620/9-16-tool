@@ -97,9 +97,14 @@ export default function InstagramPage() {
                     // Also sync local store to match
                     useStore.setState({ instagramAccounts: merged });
                     console.log('✅ FB accounts saved to Firestore:', merged.length, 'accounts');
-                  } catch (err) {
+                  } catch (err: any) {
                     console.error('❌ Firestore save failed:', err);
-                    setError('Connected, but failed to save to cloud. Please reconnect.');
+                    const msg = err?.message || String(err);
+                    if (msg.includes('permission') || msg.includes('PERMISSION_DENIED')) {
+                      setError('❌ Firebase permission error — go to Firebase Console → Firestore → Rules and set: allow read, write: if request.auth != null;');
+                    } else {
+                      setError(`Connected locally, but cloud save failed: ${msg}`);
+                    }
                   }
                 })();
               }
