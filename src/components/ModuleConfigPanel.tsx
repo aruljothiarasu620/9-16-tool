@@ -373,7 +373,7 @@ function WebhookConfig({ config, set }: { config: Record<string, unknown>; set: 
 }
 
 function CarouselConfig({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
-  const images = (config.images as string[]) || [''];
+  const images = (config.images as string[]) || [];
   const updateImage = (idx: number, val: string) => {
     const next = [...images];
     next[idx] = val;
