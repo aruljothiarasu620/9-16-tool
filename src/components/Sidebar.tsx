@@ -190,9 +190,10 @@ export default function Sidebar() {
             <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Embed the InstaFlow tracking widget.</p>
             <ol style={{ fontSize: '13px', color: 'var(--text-primary)', paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <li>Go to the <strong>Settings</strong> tab in the left sidebar.</li>
-              <li>Under the API section, copy your unique script snippet.</li>
-              <li>Open your website's source code (HTML).</li>
-              <li>Paste the snippet just before the closing <code>&lt;/body&gt;</code> tag of your website.</li>
+              <li>Under the API section, <strong>copy your unique script snippet</strong>.</li>
+              <li>Go to your website builder (like WordPress, Shopify, or Wix).</li>
+              <li>Find the section for <strong>Custom Code</strong> or <strong>Header/Footer Scripts</strong>.</li>
+              <li>Paste the snippet into the Body or Footer section and save!</li>
             </ol>
           </div>
 
