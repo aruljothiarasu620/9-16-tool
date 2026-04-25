@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { generateId } from '@/lib/utils';
-import { auth, saveUserDataToCloud } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 
 export default function InstagramPage() {
@@ -68,29 +69,39 @@ export default function InstagramPage() {
               if (!foundIg) {
                 setError("No connected Instagram Professional accounts found on your Facebook Pages. Make sure they are linked.");
               } else {
-                // ✅ RELIABLE SAVE: Poll for auth.currentUser with retries.
-                // onAuthStateChanged fires with null FIRST on page load (before
-                // Firebase restores the session), so using it with unsubscribe()
-                // was silently failing — it would unsubscribe on the null fire
-                // and never save. This retry loop waits until the user is ready.
+                // ✅ DIRECT FIRESTORE SAVE — no store dependency.
+                // We save newAccounts directly (not from the store) to avoid
+                // the race condition where AuthGuard overwrites the store with
+                // old Firestore data between addInstagramAccount and the save.
                 (async () => {
-                  let saved = false;
-                  for (let attempt = 0; attempt < 20; attempt++) {
-                    const user = auth.currentUser;
-                    if (user) {
-                      const currentAccounts = useStore.getState().instagramAccounts;
-                      await saveUserDataToCloud({ instagramAccounts: currentAccounts });
-                      console.log('✅ FB accounts saved to Firestore on attempt', attempt + 1);
-                      saved = true;
-                      break;
-                    }
-                    // Wait 500ms before next attempt (max 10s total)
-                    await new Promise(r => setTimeout(r, 500));
+                  const user = auth.currentUser;
+                  if (!user) {
+                    console.warn('⚠️ Not authenticated — cannot save to Firestore.');
+                    return;
                   }
-                  if (!saved) {
-                    console.warn('⚠️ Could not save to Firestore — user was not authenticated after 10s.');
+                  try {
+                    const docRef = doc(db, 'users', user.uid);
+                    // Load existing data first, then merge the new accounts in
+                    const snap = await getDoc(docRef);
+                    const existing: any[] = snap.exists()
+                      ? (snap.data().instagramAccounts || [])
+                      : [];
+                    // Avoid duplicates by username
+                    const merged = [
+                      ...existing.filter(
+                        (e: any) => !newAccounts.some((n: any) => n.username === e.username)
+                      ),
+                      ...newAccounts,
+                    ];
+                    await setDoc(docRef, { instagramAccounts: merged }, { merge: true });
+                    // Also sync local store to match
+                    useStore.setState({ instagramAccounts: merged });
+                    console.log('✅ FB accounts saved to Firestore:', merged.length, 'accounts');
+                  } catch (err) {
+                    console.error('❌ Firestore save failed:', err);
+                    setError('Connected, but failed to save to cloud. Please reconnect.');
                   }
-                })().catch(err => console.error('Firestore save error:', err));
+                })();
               }
             } else {
                setError("No Facebook Pages found. You must create a Facebook Page and link it to your Instagram Business account.");
@@ -125,12 +136,14 @@ export default function InstagramPage() {
     window.location.href = authUrl;
   };
 
-  const handleManualConnect = () => {
+
+  const handleManualConnect = async () => {
+
     if (!manualToken.trim() || !manualUsername.trim()) {
       setError('Please fill in at least username and access token.');
       return;
     }
-    addInstagramAccount({
+    const newAcc = {
       id: generateId(),
       username: manualUsername.trim(),
       profilePicture: '',
@@ -138,23 +151,42 @@ export default function InstagramPage() {
       accessToken: manualToken.trim(),
       pageId: '',
       connectedAt: new Date().toISOString(),
-    });
-    // Save to cloud after adding
-    setTimeout(() => {
-      saveUserDataToCloud({ instagramAccounts: useStore.getState().instagramAccounts });
-    }, 100);
+    };
+    addInstagramAccount(newAcc);
+    // Direct Firestore save
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const docRef = doc(db, 'users', user.uid);
+        const snap = await getDoc(docRef);
+        const existing: any[] = snap.exists() ? (snap.data().instagramAccounts || []) : [];
+        const merged = [...existing.filter((e: any) => e.username !== newAcc.username), newAcc];
+        await setDoc(docRef, { instagramAccounts: merged }, { merge: true });
+        useStore.setState({ instagramAccounts: merged });
+      } catch (err) {
+        console.error('Manual connect save error:', err);
+      }
+    }
     setManualToken('');
     setManualUsername('');
     setManualFollowers('');
     setShowManualForm(false);
   };
 
-  const handleDisconnect = (id: string) => {
+  const handleDisconnect = async (id: string) => {
     removeInstagramAccount(id);
-    // Save to cloud after removing
-    setTimeout(() => {
-      saveUserDataToCloud({ instagramAccounts: useStore.getState().instagramAccounts });
-    }, 100);
+    // Direct Firestore save after disconnect
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const remaining = useStore.getState().instagramAccounts.filter((a: any) => a.id !== id);
+        const docRef = doc(db, 'users', user.uid);
+        await setDoc(docRef, { instagramAccounts: remaining }, { merge: true });
+        useStore.setState({ instagramAccounts: remaining });
+      } catch (err) {
+        console.error('Disconnect save error:', err);
+      }
+    }
   };
 
   return (
