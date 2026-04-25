@@ -25,9 +25,9 @@ export default function RootLayout({
       </head>
       <body>
         <AuthGuard>
-          <div style={{ display: 'flex', minHeight: '100vh' }}>
+          <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
             <Sidebar />
-            <main style={{ marginLeft: '220px', flex: 1, minHeight: '100vh' }}>
+            <main className="main-content" style={{ flex: 1, minHeight: '100vh', marginLeft: '220px', transition: 'margin-left 0.3s ease' }}>
               {children}
             </main>
           </div>

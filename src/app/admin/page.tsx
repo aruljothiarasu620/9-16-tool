@@ -64,7 +64,7 @@ export default function AdminPage() {
       </div>
 
       {/* Real Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
+      <div className="responsive-grid" style={{ marginBottom: '32px' }}>
         {[
           { label: 'Total Registered Users', value: loadingData ? '...' : allUsers.length, color: '#7c3aed', icon: '👥' },
           { label: 'Total Connected IG Accounts', value: loadingData ? '...' : totalConnectedAccounts, color: '#E1306C', icon: '📸' },

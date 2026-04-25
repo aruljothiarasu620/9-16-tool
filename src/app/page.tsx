@@ -60,7 +60,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
+      <div className="responsive-grid" style={{ marginBottom: '32px' }}>
         {[
           { label: 'Total Scenarios', value: stats.total, color: '#7c3aed', icon: '⚡' },
           { label: 'Active', value: stats.active, color: '#10b981', icon: '✅' },
@@ -80,7 +80,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
         {(['all', 'active', 'inactive'] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
             style={{
@@ -95,13 +95,14 @@ export default function DashboardPage() {
               fontWeight: 500,
               transition: 'all 0.2s',
               textTransform: 'capitalize',
+              whiteSpace: 'nowrap'
             }}>
             {f}
           </button>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
         {/* Scenarios list */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {filtered.length === 0 && (
