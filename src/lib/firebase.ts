@@ -39,7 +39,7 @@ export const logoutUser = async () => {
 };
 
 // Explicitly save accounts/scenarios to Firestore for the current logged-in user
-export const saveUserDataToCloud = async (data: { instagramAccounts?: any[]; scenarios?: any[] }) => {
+export const saveUserDataToCloud = async (data: { instagramAccounts?: any[]; scenarios?: any[]; runLogs?: any[]; email?: string | null; name?: string | null }) => {
   const user = auth.currentUser;
   if (!user) return;
   try {
