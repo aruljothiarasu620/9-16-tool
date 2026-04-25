@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { auth, db } from './firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export type ModuleType =
   | 'schedule'
@@ -159,147 +161,165 @@ const defaultLogs: RunLog[] = [
   },
 ];
 
+// Helper to push state directly to Firebase
+const syncToCloud = (state: any) => {
+  if (auth.currentUser) {
+    const docRef = doc(db, 'users', auth.currentUser.uid);
+    setDoc(docRef, { 
+      instagramAccounts: state.instagramAccounts || [], 
+      scenarios: state.scenarios || [] 
+    }, { merge: true }).catch(err => console.error("Cloud Sync Error:", err));
+  }
+};
+
 export const useStore = create<AppStore>()(
   persist(
-    (set) => ({
-      scenarios: defaultScenarios,
-      runLogs: defaultLogs,
-      instagramAccounts: [],
-      activeScenarioId: null,
-      settings: {
-        facebookAppId: '2001458060448073',
-        facebookAppSecret: 'fff9231ce808e506def32a87c8cef303',
-        notifyOnSuccess: true,
-        notifyOnFailure: true,
-        notifyEmail: '',
-      },
+    (set, get) => {
+      const syncSet = (fn: any) => {
+        set(fn);
+        syncToCloud(get());
+      };
 
-      addScenario: (scenario) =>
-        set((state) => ({ scenarios: [...state.scenarios, scenario] })),
+      return {
+        scenarios: defaultScenarios,
+        runLogs: defaultLogs,
+        instagramAccounts: [],
+        activeScenarioId: null,
+        settings: {
+          facebookAppId: '2001458060448073',
+          facebookAppSecret: 'fff9231ce808e506def32a87c8cef303',
+          notifyOnSuccess: true,
+          notifyOnFailure: true,
+          notifyEmail: '',
+        },
 
-      updateScenario: (id, updates) =>
-        set((state) => ({
-          scenarios: state.scenarios.map((s) =>
-            s.id === id ? { ...s, ...updates } : s
-          ),
-        })),
+        addScenario: (scenario) =>
+          syncSet((state: AppStore) => ({ scenarios: [...state.scenarios, scenario] })),
 
-      deleteScenario: (id) =>
-        set((state) => ({
-          scenarios: state.scenarios.filter((s) => s.id !== id),
-        })),
+        updateScenario: (id, updates) =>
+          syncSet((state: AppStore) => ({
+            scenarios: state.scenarios.map((s) =>
+              s.id === id ? { ...s, ...updates } : s
+            ),
+          })),
 
-      setActiveScenario: (id) => set({ activeScenarioId: id }),
+        deleteScenario: (id) =>
+          syncSet((state: AppStore) => ({
+            scenarios: state.scenarios.filter((s) => s.id !== id),
+          })),
 
-      addModule: (scenarioId, module) =>
-        set((state) => ({
-          scenarios: state.scenarios.map((s) =>
-            s.id === scenarioId
-              ? { ...s, modules: [...s.modules, module] }
-              : s
-          ),
-        })),
+        setActiveScenario: (id) => set({ activeScenarioId: id }),
 
-      updateModule: (scenarioId, moduleId, config) =>
-        set((state) => ({
-          scenarios: state.scenarios.map((s) =>
-            s.id === scenarioId
-              ? {
-                  ...s,
-                  modules: s.modules.map((m) =>
-                    m.id === moduleId ? { ...m, config } : m
-                  ),
-                }
-              : s
-          ),
-        })),
+        addModule: (scenarioId, module) =>
+          syncSet((state: AppStore) => ({
+            scenarios: state.scenarios.map((s) =>
+              s.id === scenarioId
+                ? { ...s, modules: [...s.modules, module] }
+                : s
+            ),
+          })),
 
-      removeModule: (scenarioId, moduleId) =>
-        set((state) => ({
-          scenarios: state.scenarios.map((s) =>
-            s.id === scenarioId
-              ? {
-                  ...s,
-                  modules: s.modules.filter((m) => m.id !== moduleId),
-                  connections: s.connections.filter(
-                    (c) => c.source !== moduleId && c.target !== moduleId
-                  ),
-                }
-              : s
-          ),
-        })),
+        updateModule: (scenarioId, moduleId, config) =>
+          syncSet((state: AppStore) => ({
+            scenarios: state.scenarios.map((s) =>
+              s.id === scenarioId
+                ? {
+                    ...s,
+                    modules: s.modules.map((m) =>
+                      m.id === moduleId ? { ...m, config } : m
+                    ),
+                  }
+                : s
+            ),
+          })),
 
-      updateModulePosition: (scenarioId, moduleId, position) =>
-        set((state) => ({
-          scenarios: state.scenarios.map((s) =>
-            s.id === scenarioId
-              ? {
-                  ...s,
-                  modules: s.modules.map((m) =>
-                    m.id === moduleId ? { ...m, position } : m
-                  ),
-                }
-              : s
-          ),
-        })),
+        removeModule: (scenarioId, moduleId) =>
+          syncSet((state: AppStore) => ({
+            scenarios: state.scenarios.map((s) =>
+              s.id === scenarioId
+                ? {
+                    ...s,
+                    modules: s.modules.filter((m) => m.id !== moduleId),
+                    connections: s.connections.filter(
+                      (c) => c.source !== moduleId && c.target !== moduleId
+                    ),
+                  }
+                : s
+            ),
+          })),
 
-      addConnection: (scenarioId, connection) =>
-        set((state) => ({
-          scenarios: state.scenarios.map((s) =>
-            s.id === scenarioId
-              ? { ...s, connections: [...s.connections, connection] }
-              : s
-          ),
-        })),
+        updateModulePosition: (scenarioId, moduleId, position) =>
+          syncSet((state: AppStore) => ({
+            scenarios: state.scenarios.map((s) =>
+              s.id === scenarioId
+                ? {
+                    ...s,
+                    modules: s.modules.map((m) =>
+                      m.id === moduleId ? { ...m, position } : m
+                    ),
+                  }
+                : s
+            ),
+          })),
 
-      removeConnection: (scenarioId, connectionId) =>
-        set((state) => ({
-          scenarios: state.scenarios.map((s) =>
-            s.id === scenarioId
-              ? {
-                  ...s,
-                  connections: s.connections.filter(
-                    (c) => c.id !== connectionId
-                  ),
-                }
-              : s
-          ),
-        })),
+        addConnection: (scenarioId, connection) =>
+          syncSet((state: AppStore) => ({
+            scenarios: state.scenarios.map((s) =>
+              s.id === scenarioId
+                ? { ...s, connections: [...s.connections, connection] }
+                : s
+            ),
+          })),
 
-      addRunLog: (log) =>
-        set((state) => ({
-          runLogs: [log, ...state.runLogs].slice(0, 50),
-        })),
+        removeConnection: (scenarioId, connectionId) =>
+          syncSet((state: AppStore) => ({
+            scenarios: state.scenarios.map((s) =>
+              s.id === scenarioId
+                ? {
+                    ...s,
+                    connections: s.connections.filter(
+                      (c) => c.id !== connectionId
+                    ),
+                  }
+                : s
+            ),
+          })),
 
-      clearRunLogs: (scenarioId) =>
-        set((state) => ({
-          runLogs: state.runLogs.filter((l) => l.scenarioId !== scenarioId),
-        })),
+        addRunLog: (log) =>
+          set((state) => ({
+            runLogs: [log, ...state.runLogs].slice(0, 50),
+          })),
 
-      addInstagramAccount: (account) =>
-        set((state) => ({
-          instagramAccounts: [...state.instagramAccounts, account],
-        })),
+        clearRunLogs: (scenarioId) =>
+          set((state) => ({
+            runLogs: state.runLogs.filter((l) => l.scenarioId !== scenarioId),
+          })),
 
-      removeInstagramAccount: (id) =>
-        set((state) => ({
-          instagramAccounts: state.instagramAccounts.filter(
-            (a) => a.id !== id
-          ),
-        })),
+        addInstagramAccount: (account) =>
+          syncSet((state: AppStore) => ({
+            instagramAccounts: [...state.instagramAccounts, account],
+          })),
 
-      updateInstagramAccount: (id, updates) =>
-        set((state) => ({
-          instagramAccounts: state.instagramAccounts.map((a) =>
-            a.id === id ? { ...a, ...updates } : a
-          ),
-        })),
+        removeInstagramAccount: (id) =>
+          syncSet((state: AppStore) => ({
+            instagramAccounts: state.instagramAccounts.filter(
+              (a) => a.id !== id
+            ),
+          })),
 
-      updateSettings: (updates) =>
-        set((state) => ({
-          settings: { ...state.settings, ...updates },
-        })),
-    }),
+        updateInstagramAccount: (id, updates) =>
+          syncSet((state: AppStore) => ({
+            instagramAccounts: state.instagramAccounts.map((a) =>
+              a.id === id ? { ...a, ...updates } : a
+            ),
+          })),
+
+        updateSettings: (updates) =>
+          syncSet((state: AppStore) => ({
+            settings: { ...state.settings, ...updates },
+          })),
+      };
+    },
     {
       name: 'instagram-automation-store',
     }
