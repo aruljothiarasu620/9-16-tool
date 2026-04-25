@@ -108,127 +108,6 @@ export default function ModuleConfigPanel({ module, onUpdate, onClose, onDelete 
   );
 }
 
-// ========= Components =========
-
-function MediaUpload({ 
-  value, 
-  onChange, 
-  label, 
-  type = 'image' 
-}: { 
-  value: string; 
-  onChange: (url: string) => void; 
-  label: string;
-  type?: 'image' | 'video' 
-}) {
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    setError(null);
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (data.url) {
-        onChange(data.url);
-      } else {
-        setError(data.error || 'Upload failed');
-      }
-    } catch (err) {
-      setError('Network error');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div style={{ marginBottom: '16px' }}>
-      <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>
-        {label}
-      </label>
-      
-      {value && (
-        <div style={{ 
-          marginBottom: '10px', 
-          position: 'relative', 
-          borderRadius: '8px', 
-          overflow: 'hidden', 
-          border: '1px solid var(--border)',
-          aspectRatio: type === 'video' ? '16/9' : '1/1',
-          background: 'black',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          {type === 'image' ? (
-            <img src={value} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-          ) : (
-            <video src={value} controls style={{ width: '100%', height: '100%' }} />
-          )}
-          <button 
-            onClick={() => onChange('')}
-            style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', color: 'white', width: '24px', height: '24px', cursor: 'pointer' }}
-          >✕</button>
-        </div>
-      )}
-
-      <div style={{ position: 'relative' }}>
-        <input 
-          type="file" 
-          accept={type === 'image' ? "image/*" : "video/*"}
-          onChange={handleUpload}
-          style={{ display: 'none' }}
-          id={`upload-${label}`}
-          disabled={uploading}
-        />
-        <label 
-          htmlFor={`upload-${label}`}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            padding: '12px',
-            background: uploading ? 'var(--bg-card)' : 'rgba(124,58,237,0.1)',
-            border: `1px dashed ${uploading ? 'var(--border)' : 'var(--accent)'}`,
-            borderRadius: '8px',
-            cursor: uploading ? 'wait' : 'pointer',
-            fontSize: '13px',
-            color: uploading ? 'var(--text-muted)' : 'var(--accent-light)',
-            transition: 'all 0.2s'
-          }}
-        >
-          {uploading ? '⏳ Uploading...' : `📤 Click to Upload ${type === 'image' ? 'Image' : 'Video'}`}
-        </label>
-        {error && <div style={{ color: 'var(--error)', fontSize: '11px', marginTop: '4px' }}>{error}</div>}
-      </div>
-      
-      {value && (
-        <div style={{ marginTop: '8px' }}>
-          <input 
-            className="input" 
-            value={value} 
-            readOnly 
-            style={{ fontSize: '10px', opacity: 0.6, height: '28px' }}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ========= Sub-configs =========
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -373,7 +252,7 @@ function WebhookConfig({ config, set }: { config: Record<string, unknown>; set: 
 }
 
 function CarouselConfig({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
-  const images = (config.images as string[]) || [];
+  const images = (config.images as string[]) || [''];
   const updateImage = (idx: number, val: string) => {
     const next = [...images];
     next[idx] = val;
@@ -382,53 +261,27 @@ function CarouselConfig({ config, set }: { config: Record<string, unknown>; set:
   return (
     <>
       <AccountSelector config={config} set={set} />
-      <div style={{ marginBottom: '16px' }}>
-        <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>
-          Images ({images.length}/10)
-        </label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {images.map((img, i) => (
-            <div key={i} style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border)' }}>
-              {img ? (
-                <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <div style={{ width: '100%', height: '100%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🖼️</div>
-              )}
+      <Field label={`Images (${images.length}/10)`}>
+        {images.map((img, i) => (
+          <div key={i} style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+            <input className="input" placeholder={`Image ${i + 1} URL`}
+              value={img} onChange={(e) => updateImage(i, e.target.value)}
+              style={{ flex: 1 }} />
+            {images.length > 1 && (
               <button onClick={() => set('images', images.filter((_, j) => j !== i))}
-                style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(239,68,68,0.8)', border: 'none', borderRadius: '50%', color: 'white', width: '16px', height: '16px', cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-            </div>
-          ))}
-          {images.length < 10 && (
-            <div style={{ position: 'relative', width: '60px', height: '60px' }}>
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  try {
-                    const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                    const data = await res.json();
-                    if (data.url) {
-                      const clean = images.filter(img => img && img.trim() !== '');
-                      set('images', [...clean, data.url]);
-                    } else {
-                      alert('Error: ' + (data.error || 'Upload failed. Check your Cloudinary keys in Admin Panel!'));
-                    }
-                  } catch (err) {
-                    alert('Network error during upload');
-                  }
-                }}
-                style={{ display: 'none' }}
-                id="carousel-upload"
-              />
-              <label htmlFor="carousel-upload" style={{ width: '100%', height: '100%', background: 'rgba(124,58,237,0.1)', border: '1px dashed var(--accent)', borderRadius: '6px', color: 'var(--accent-light)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>+</label>
-            </div>
-          )}
-        </div>
-      </div>
+                style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', color: '#ef4444', padding: '0 10px', cursor: 'pointer' }}>
+                ✕
+              </button>
+            )}
+          </div>
+        ))}
+        {images.length < 10 && (
+          <button onClick={() => set('images', [...images, ''])}
+            style={{ width: '100%', padding: '8px', background: 'rgba(124,58,237,0.1)', border: '1px dashed var(--accent)', borderRadius: '6px', color: 'var(--accent-light)', cursor: 'pointer', fontSize: '13px' }}>
+            + Add Image
+          </button>
+        )}
+      </Field>
       <CaptionHashtagFields config={config} set={set} />
       <PostTimingSelector config={config} set={set} />
     </>
@@ -439,11 +292,11 @@ function SinglePostConfig({ config, set }: { config: Record<string, unknown>; se
   return (
     <>
       <AccountSelector config={config} set={set} />
-      <MediaUpload 
-        label="Image Upload" 
-        value={(config.imageUrl as string) || ''} 
-        onChange={(url) => set('imageUrl', url)} 
-      />
+      <Field label="Image URL">
+        <input className="input" placeholder="https://example.com/image.jpg"
+          value={(config.imageUrl as string) || ''}
+          onChange={(e) => set('imageUrl', e.target.value)} />
+      </Field>
       <CaptionHashtagFields config={config} set={set} />
       <PostTimingSelector config={config} set={set} />
     </>
@@ -454,17 +307,16 @@ function ReelConfig({ config, set }: { config: Record<string, unknown>; set: (k:
   return (
     <>
       <AccountSelector config={config} set={set} />
-      <MediaUpload 
-        label="Video Upload" 
-        type="video"
-        value={(config.videoUrl as string) || ''} 
-        onChange={(url) => set('videoUrl', url)} 
-      />
-      <MediaUpload 
-        label="Cover Image Upload" 
-        value={(config.coverUrl as string) || ''} 
-        onChange={(url) => set('coverUrl', url)} 
-      />
+      <Field label="Video URL">
+        <input className="input" placeholder="https://example.com/reel.mp4"
+          value={(config.videoUrl as string) || ''}
+          onChange={(e) => set('videoUrl', e.target.value)} />
+      </Field>
+      <Field label="Cover Image URL">
+        <input className="input" placeholder="https://example.com/cover.jpg"
+          value={(config.coverUrl as string) || ''}
+          onChange={(e) => set('coverUrl', e.target.value)} />
+      </Field>
       <Field label="Caption">
         <textarea className="input" rows={4} placeholder="Write your reel caption..."
           value={(config.caption as string) || ''}
