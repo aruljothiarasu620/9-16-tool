@@ -66,18 +66,16 @@ export default function Sidebar() {
         {/* Logo */}
         <div style={{ padding: '0 8px 28px', borderBottom: '1px solid var(--border)', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '36px', height: '36px',
-              background: 'linear-gradient(135deg, #7c3aed, #db2777)',
-              borderRadius: '10px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '18px',
-            }}>⚡</div>
-            <div className="sidebar-label">
-              <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>InstaFlow</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Automation Builder</div>
-            </div>
+          <img 
+            src="/logo.jpeg" 
+            alt="Logo" 
+            style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover' }} 
+          />
+          <div className="sidebar-label">
+            <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>InstaFlow</div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>made by mamitha.crushae</div>
           </div>
+        </div>
         </div>
 
         {/* Nav */}
