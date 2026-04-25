@@ -20,41 +20,27 @@ export default function Sidebar() {
   const store = useStore();
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
 
-  // Robust Auth & Cloud Load Logic
+  // Load user data from Firestore on login, clear on logout
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
-      
+
       if (user) {
         try {
-          // Check if we are returning from a Facebook login redirect!
-          const isReturningFromFacebook = typeof window !== 'undefined' && 
-            (window.location.hash.includes('access_token') || sessionStorage.getItem('fb_oauth_in_progress') === 'true');
-          
-          if (!isReturningFromFacebook) {
-            // Normal Page Load: Download Cloud Data
-            const docRef = doc(db, 'users', user.uid);
-            const snap = await getDoc(docRef);
-            
-            if (snap.exists()) {
-              const data = snap.data();
-              useStore.setState({ instagramAccounts: data.instagramAccounts || [], scenarios: data.scenarios || [] });
-            } else {
-              // New user, trigger a sync by re-saving state
-              const currentState = useStore.getState();
-              useStore.setState({ instagramAccounts: currentState.instagramAccounts });
-            }
-          } else {
-            sessionStorage.removeItem('fb_oauth_in_progress');
+          const docRef = doc(db, 'users', user.uid);
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            const data = snap.data();
+            useStore.setState({
+              instagramAccounts: data.instagramAccounts || [],
+              scenarios: data.scenarios || [],
+            });
           }
         } catch (err: any) {
-          console.error("Firebase Load Error:", err);
-          if (err.message.includes("permission")) {
-             alert("⚠️ Database Error: Your Firebase Database is blocking data loads due to Rules. Please change Firestore Rules to allow read/write.");
-          }
+          console.error('Firebase Load Error:', err);
         }
       } else {
-        // Logged out
+        // Logged out — clear sensitive data
         useStore.setState({ instagramAccounts: [], scenarios: [] });
       }
     });

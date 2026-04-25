@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCXuj6Y0Mih2mfBdedjyuxjXeU5iN5XL64",
@@ -35,5 +35,17 @@ export const logoutUser = async () => {
   } catch (error) {
     console.error("Error signing out", error);
     throw error;
+  }
+};
+
+// Explicitly save accounts/scenarios to Firestore for the current logged-in user
+export const saveUserDataToCloud = async (data: { instagramAccounts?: any[]; scenarios?: any[] }) => {
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const docRef = doc(db, 'users', user.uid);
+    await setDoc(docRef, data, { merge: true });
+  } catch (err) {
+    console.error('saveUserDataToCloud error:', err);
   }
 };

@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { generateId } from '@/lib/utils';
-
-// FB SDK declarations removed as we are using manual OAuth flow
+import { auth, saveUserDataToCloud } from '@/lib/firebase';
 
 
 export default function InstagramPage() {
@@ -31,17 +30,14 @@ export default function InstagramPage() {
       const params = new URLSearchParams(hash.substring(1));
       const token = params.get('long_lived_token') || params.get('access_token');
       
+      // Clean up the URL immediately
+      window.history.replaceState(null, '', window.location.pathname);
+      
       if (token) {
-        // Prevent Firebase from overwriting this token during the page load race condition
-        sessionStorage.setItem('fb_oauth_in_progress', 'true');
-        
-        // Clean up the URL
-        window.history.replaceState(null, '', window.location.pathname);
-        
         // Fetch the user's pages and connected Instagram accounts
         fetch(`https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,instagram_business_account{name,followers_count,profile_picture_url,username}&access_token=${token}`)
           .then(res => res.json())
-          .then(data => {
+          .then(async data => {
             if (data.error) {
               setError(data.error.message);
               setIsConnecting(false);
@@ -50,23 +46,44 @@ export default function InstagramPage() {
             
             if (data.data && data.data.length > 0) {
               let foundIg = false;
+              const newAccounts: any[] = [];
               data.data.forEach((page: any) => {
                 if (page.instagram_business_account) {
                    foundIg = true;
                    const igAccount = page.instagram_business_account;
-                   addInstagramAccount({
+                   const newAcc = {
                       id: generateId(),
                       username: igAccount.username || page.name || 'Unknown',
                       profilePicture: igAccount.profile_picture_url || '',
                       followerCount: igAccount.followers_count || 0,
-                      accessToken: page.access_token || token, // Required for publishing
-                      pageId: igAccount.id, // MUST be the IG account ID, not FB Page ID
+                      accessToken: page.access_token || token,
+                      pageId: igAccount.id,
                       connectedAt: new Date().toISOString(),
-                    });
+                   };
+                   addInstagramAccount(newAcc);
+                   newAccounts.push(newAcc);
                 }
               });
+
               if (!foundIg) {
                 setError("No connected Instagram Professional accounts found on your Facebook Pages. Make sure they are linked.");
+              } else {
+                // ✅ THE KEY FIX: Save directly to Firestore right here!
+                const saveToCloud = async () => {
+                  let user = auth.currentUser;
+                  if (!user) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    user = auth.currentUser;
+                  }
+                  if (user) {
+                    const currentAccounts = useStore.getState().instagramAccounts;
+                    await saveUserDataToCloud({ instagramAccounts: currentAccounts });
+                    console.log('✅ FB accounts saved to Firestore');
+                  } else {
+                    console.warn('⚠️ No Google login — accounts stored locally only.');
+                  }
+                };
+                saveToCloud().catch(err => console.error('Firestore save error:', err));
               }
             } else {
                setError("No Facebook Pages found. You must create a Facebook Page and link it to your Instagram Business account.");
@@ -78,6 +95,8 @@ export default function InstagramPage() {
             setError('Failed to fetch account data from Facebook.');
             setIsConnecting(false);
           });
+      } else {
+        setIsConnecting(false);
       }
     }
   }, [addInstagramAccount]);
@@ -113,10 +132,22 @@ export default function InstagramPage() {
       pageId: '',
       connectedAt: new Date().toISOString(),
     });
+    // Save to cloud after adding
+    setTimeout(() => {
+      saveUserDataToCloud({ instagramAccounts: useStore.getState().instagramAccounts });
+    }, 100);
     setManualToken('');
     setManualUsername('');
     setManualFollowers('');
     setShowManualForm(false);
+  };
+
+  const handleDisconnect = (id: string) => {
+    removeInstagramAccount(id);
+    // Save to cloud after removing
+    setTimeout(() => {
+      saveUserDataToCloud({ instagramAccounts: useStore.getState().instagramAccounts });
+    }, 100);
   };
 
   return (
@@ -232,7 +263,7 @@ export default function InstagramPage() {
                     ))}
                   </div>
                   <button
-                    onClick={() => removeInstagramAccount(account.id)}
+                  onClick={() => handleDisconnect(account.id)}
                     style={{
                       background: 'rgba(239,68,68,0.1)',
                       border: '1px solid rgba(239,68,68,0.3)',
