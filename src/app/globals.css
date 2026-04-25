@@ -460,6 +460,10 @@ input:checked + .toggle-slider:before {
     overflow-y: auto;
     box-shadow: 4px 0 24px rgba(0,0,0,0.5);
   }
+  /* Force labels to show when mobile drawer is open */
+  .sidebar-container.mobile-open .sidebar-label {
+    display: block !important;
+  }
   .main-content {
     margin-left: 0 !important;
     padding: 20px !important;
