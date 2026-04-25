@@ -1,13 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import Link from 'next/link';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+
+const ADMIN_EMAIL = 'aruljothiarasu620@gmail.com';
 
 export default function SettingsPage() {
   const { instagramAccounts, removeInstagramAccount, settings, updateSettings, runLogs } = useStore();
   const [saved, setSaved] = useState(false);
   const [localSettings, setLocalSettings] = useState(settings);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setIsAdmin(user?.email === ADMIN_EMAIL);
+    });
+    return () => unsub();
+  }, []);
 
   const set = (key: string, value: unknown) => {
     setLocalSettings((prev) => ({ ...prev, [key]: value }));
@@ -29,91 +41,93 @@ export default function SettingsPage() {
         <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Configure API credentials, accounts, and preferences</p>
       </div>
 
-      {/* API Credentials */}
-      <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
-        <h2 style={{ fontWeight: 700, fontSize: '16px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>🔑</span> API Credentials
-        </h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
-          Required for Instagram OAuth login. Create a Facebook Developer app at{' '}
-          <a href="https://developers.facebook.com" target="_blank" rel="noopener noreferrer"
-            style={{ color: 'var(--accent-light)', textDecoration: 'none' }}>
-            developers.facebook.com
-          </a>
-        </p>
+      {/* API Credentials - ADMIN ONLY */}
+      {isAdmin && (
+        <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
+          <h2 style={{ fontWeight: 700, fontSize: '16px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>🔑</span> API Credentials <span className="badge" style={{ background: 'var(--accent)', color: 'white', border: 'none' }}>Admin Only</span>
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
+            Required for Instagram OAuth login. Create a Facebook Developer app at{' '}
+            <a href="https://developers.facebook.com" target="_blank" rel="noopener noreferrer"
+              style={{ color: 'var(--accent-light)', textDecoration: 'none' }}>
+              developers.facebook.com
+            </a>
+          </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>
-              Facebook App ID
-            </label>
-            <input className="input" placeholder="1234567890"
-              value={localSettings.facebookAppId}
-              onChange={(e) => set('facebookAppId', e.target.value)} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>
+                Facebook App ID
+              </label>
+              <input className="input" placeholder="1234567890"
+                value={localSettings.facebookAppId}
+                onChange={(e) => set('facebookAppId', e.target.value)} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>
+                App Secret
+              </label>
+              <input className="input" type="password" placeholder="••••••••••••••••"
+                value={localSettings.facebookAppSecret}
+                onChange={(e) => set('facebookAppSecret', e.target.value)} />
+            </div>
           </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>
-              App Secret
-            </label>
-            <input className="input" type="password" placeholder="••••••••••••••••"
-              value={localSettings.facebookAppSecret}
-              onChange={(e) => set('facebookAppSecret', e.target.value)} />
-          </div>
-        </div>
 
-        {/* Required permissions list */}
-        <div style={{ padding: '14px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Required Permissions
+          {/* Required permissions list */}
+          <div style={{ padding: '14px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Required Permissions
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {[
+                'instagram_basic',
+                'instagram_content_publish',
+                'pages_read_engagement',
+                'pages_manage_posts',
+              ].map((perm) => (
+                <code key={perm} style={{
+                  background: 'rgba(124,58,237,0.1)',
+                  border: '1px solid rgba(124,58,237,0.3)',
+                  color: 'var(--accent-light)',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                }}>
+                  {perm}
+                </code>
+              ))}
+            </div>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+
+          {/* Steps */}
+          <div style={{ padding: '14px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Setup Steps
+            </div>
             {[
-              'instagram_basic',
-              'instagram_content_publish',
-              'pages_read_engagement',
-              'pages_manage_posts',
-            ].map((perm) => (
-              <code key={perm} style={{
-                background: 'rgba(124,58,237,0.1)',
-                border: '1px solid rgba(124,58,237,0.3)',
-                color: 'var(--accent-light)',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                fontSize: '12px',
-              }}>
-                {perm}
-              </code>
+              'Go to developers.facebook.com and create a new app',
+              'Add "Instagram" and "Facebook Login" products to your app',
+              'Configure OAuth redirect URI: https://localhost:3000',
+              'Add permissions listed above in the App Review section',
+              'Copy App ID and Secret here and click Save',
+            ].map((step, i) => (
+              <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: '8px', fontSize: '13px', color: 'var(--text-muted)' }}>
+                <span style={{
+                  background: 'var(--accent)',
+                  color: 'white',
+                  width: '20px', height: '20px',
+                  borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '11px', fontWeight: 700,
+                  flexShrink: 0,
+                }}>{i + 1}</span>
+                <span>{step}</span>
+              </div>
             ))}
           </div>
         </div>
-
-        {/* Steps */}
-        <div style={{ padding: '14px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Setup Steps
-          </div>
-          {[
-            'Go to developers.facebook.com and create a new app',
-            'Add "Instagram" and "Facebook Login" products to your app',
-            'Configure OAuth redirect URI: https://localhost:3000',
-            'Add permissions listed above in the App Review section',
-            'Copy App ID and Secret here and click Save',
-          ].map((step, i) => (
-            <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: '8px', fontSize: '13px', color: 'var(--text-muted)' }}>
-              <span style={{
-                background: 'var(--accent)',
-                color: 'white',
-                width: '20px', height: '20px',
-                borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '11px', fontWeight: 700,
-                flexShrink: 0,
-              }}>{i + 1}</span>
-              <span>{step}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Connected Accounts */}
       <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
