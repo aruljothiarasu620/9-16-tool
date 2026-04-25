@@ -382,10 +382,9 @@ function CarouselConfig({ config, set }: { config: Record<string, unknown>; set:
   return (
     <>
       <AccountSelector config={config} set={set} />
-      <AccountSelector config={config} set={set} />
       <div style={{ marginBottom: '16px' }}>
         <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase' }}>
-          Images (${images.length}/10)
+          Images ({images.length}/10)
         </label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {images.map((img, i) => (
@@ -409,9 +408,18 @@ function CarouselConfig({ config, set }: { config: Record<string, unknown>; set:
                   if (!file) return;
                   const formData = new FormData();
                   formData.append('file', file);
-                  const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                  const data = await res.json();
-                  if (data.url) set('images', [...images.filter(img => img !== ''), data.url]);
+                  try {
+                    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (data.url) {
+                      const clean = images.filter(img => img && img.trim() !== '');
+                      set('images', [...clean, data.url]);
+                    } else {
+                      alert('Error: ' + (data.error || 'Upload failed. Check your Cloudinary keys in Admin Panel!'));
+                    }
+                  } catch (err) {
+                    alert('Network error during upload');
+                  }
                 }}
                 style={{ display: 'none' }}
                 id="carousel-upload"
