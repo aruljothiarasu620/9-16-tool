@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { useEffect, useState } from 'react';
-import { auth, loginWithGoogle, logoutUser, db } from '@/lib/firebase';
+import { auth, loginWithGoogle, logoutUser } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+
+const ADMIN_EMAIL = 'aruljothiarasu620@gmail.com';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: '⚡' },
@@ -20,33 +21,18 @@ export default function Sidebar() {
   const store = useStore();
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
 
-  // Load user data from Firestore on login, clear on logout
+  // Just track auth state — AuthGuard handles data loading
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+    const unsub = onAuthStateChanged(auth, (user) => {
       setFirebaseUser(user);
-
-      if (user) {
-        try {
-          const docRef = doc(db, 'users', user.uid);
-          const snap = await getDoc(docRef);
-          if (snap.exists()) {
-            const data = snap.data();
-            useStore.setState({
-              instagramAccounts: data.instagramAccounts || [],
-              scenarios: data.scenarios || [],
-            });
-          }
-        } catch (err: any) {
-          console.error('Firebase Load Error:', err);
-        }
-      } else {
-        // Logged out — clear sensitive data
+      if (!user) {
         useStore.setState({ instagramAccounts: [], scenarios: [] });
       }
     });
-
-    return () => unsubscribeAuth();
+    return () => unsub();
   }, []);
+
+  const isAdmin = firebaseUser?.email === ADMIN_EMAIL;
 
   return (
     <aside style={{
@@ -100,6 +86,17 @@ export default function Sidebar() {
             )}
           </Link>
         ))}
+        {/* Admin link — only visible for admin email */}
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className={`nav-item ${pathname === '/admin' ? 'active' : ''}`}
+            style={{ marginTop: '8px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}
+          >
+            <span>🛡️</span>
+            <span>Admin</span>
+          </Link>
+        )}
       </nav>
 
       {/* Footer / User Profile */}

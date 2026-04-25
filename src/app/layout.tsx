@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Sidebar from '@/components/Sidebar';
+import AuthGuard from '@/components/AuthGuard';
 
 export const metadata: Metadata = {
   title: 'InstaFlow - Instagram Automation Builder',
@@ -23,12 +24,14 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <div style={{ display: 'flex', minHeight: '100vh' }}>
-          <Sidebar />
-          <main style={{ marginLeft: '220px', flex: 1, minHeight: '100vh' }}>
-            {children}
-          </main>
-        </div>
+        <AuthGuard>
+          <div style={{ display: 'flex', minHeight: '100vh' }}>
+            <Sidebar />
+            <main style={{ marginLeft: '220px', flex: 1, minHeight: '100vh' }}>
+              {children}
+            </main>
+          </div>
+        </AuthGuard>
       </body>
     </html>
   );
