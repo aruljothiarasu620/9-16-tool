@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useStore } from '@/lib/store';
+import { useEffect, useState } from 'react';
+import { auth, loginWithGoogle, logoutUser } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: '⚡' },
@@ -14,6 +17,14 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { instagramAccounts } = useStore();
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <aside style={{
@@ -69,8 +80,28 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer */}
+      {/* Footer / User Profile */}
       <div style={{ marginTop: 'auto', padding: '16px 8px 0', borderTop: '1px solid var(--border)' }}>
+        {firebaseUser ? (
+          <div style={{ marginBottom: '16px', background: 'var(--bg-primary)', padding: '12px', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <img src={firebaseUser.photoURL || ''} alt="Profile" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+              <div style={{ overflow: 'hidden' }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{firebaseUser.displayName}</div>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Logged in</div>
+              </div>
+            </div>
+            <button onClick={logoutUser} style={{ width: '100%', padding: '6px', fontSize: '11px', background: 'none', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              Sign Out
+            </button>
+          </div>
+        ) : (
+          <button onClick={loginWithGoogle} style={{ width: '100%', marginBottom: '16px', padding: '10px', fontSize: '13px', background: 'white', color: 'black', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <img src="https://www.google.com/favicon.ico" alt="G" style={{ width: '16px', height: '16px' }} />
+            Sign in with Google
+          </button>
+        )}
+
         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
           {instagramAccounts.length > 0 ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
