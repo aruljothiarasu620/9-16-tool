@@ -39,25 +39,24 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     // 5. Upload to Cloudinary
-    return new Promise((resolve) => {
-      cloudinary.uploader.upload_stream(
+    const result: any = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
         { resource_type: 'auto', folder: 'instaflow_uploads' },
         (error, result) => {
-          if (error) {
-            console.error('Cloudinary upload error:', error);
-            resolve(NextResponse.json({ error: 'Upload failed' }, { status: 500 }));
-          } else {
-            resolve(NextResponse.json({ 
-              url: result?.secure_url,
-              public_id: result?.public_id 
-            }));
-          }
+          if (error) reject(error);
+          else resolve(result);
         }
-      ).end(buffer);
+      );
+      uploadStream.end(buffer);
     });
 
-  } catch (err) {
+    return NextResponse.json({ 
+      url: result?.secure_url,
+      public_id: result?.public_id 
+    });
+
+  } catch (err: any) {
     console.error('API Upload error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 });
   }
 }
