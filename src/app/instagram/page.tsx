@@ -174,15 +174,16 @@ export default function InstagramPage() {
   };
 
   const handleDisconnect = async (id: string) => {
+    // Compute remaining BEFORE store update to avoid React batching timing issues
+    const remaining = useStore.getState().instagramAccounts.filter((a: any) => a.id !== id);
     removeInstagramAccount(id);
-    // Direct Firestore save after disconnect
+    // Write the exact remaining list to Firestore
     const user = auth.currentUser;
     if (user) {
       try {
-        const remaining = useStore.getState().instagramAccounts.filter((a: any) => a.id !== id);
         const docRef = doc(db, 'users', user.uid);
         await setDoc(docRef, { instagramAccounts: remaining }, { merge: true });
-        useStore.setState({ instagramAccounts: remaining });
+        console.log('✅ Disconnected and saved:', remaining.length, 'accounts remaining');
       } catch (err) {
         console.error('Disconnect save error:', err);
       }
