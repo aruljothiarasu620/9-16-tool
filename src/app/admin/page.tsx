@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -13,60 +13,16 @@ export default function AdminPage() {
   // Real data state
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [totalConnectedAccounts, setTotalConnectedAccounts] = useState(0);
-  
-  // Cloudinary Settings
-  const [cloudName, setCloudName] = useState('');
-  const [apiKey, setApiKey] = useState('');
-  const [apiSecret, setApiSecret] = useState('');
-  const [savingSettings, setSavingSettings] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (u?.email === 'aruljothiarasu620@gmail.com') {
         fetchAllUsers();
-        fetchCloudinarySettings();
       }
     });
     return () => unsub();
   }, []);
-
-  const fetchCloudinarySettings = async () => {
-    try {
-      const docRef = doc(db, 'config', 'cloudinary');
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        setCloudName(data.cloudName || '');
-        setApiKey(data.apiKey || '');
-        setApiSecret(data.apiSecret || '');
-      }
-    } catch (err) {
-      console.error('Error fetching Cloudinary settings:', err);
-    }
-  };
-
-  const saveCloudinarySettings = async () => {
-    setSavingSettings(true);
-    setSaveStatus('idle');
-    try {
-      const docRef = doc(db, 'config', 'cloudinary');
-      await setDoc(docRef, {
-        cloudName,
-        apiKey,
-        apiSecret,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-      setSaveStatus('success');
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch (err) {
-      console.error('Error saving Cloudinary settings:', err);
-      setSaveStatus('error');
-    } finally {
-      setSavingSettings(false);
-    }
-  };
 
   const fetchAllUsers = async () => {
     try {
@@ -125,69 +81,6 @@ export default function AdminPage() {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Cloudinary Settings Section */}
-      <div className="card" style={{ padding: '28px', marginBottom: '24px', border: '1px solid var(--accent-glow)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <div>
-            <h2 style={{ fontWeight: 700, fontSize: '18px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#0078ff' }}>☁️</span> Cloudinary Config
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-              Control the automatic image-to-URL engine. Switch accounts anytime.
-            </p>
-          </div>
-          {saveStatus === 'success' && (
-            <span style={{ color: 'var(--success)', fontSize: '13px', fontWeight: 600 }}>✓ Saved Successfully</span>
-          )}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-          <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-              Cloud Name
-            </label>
-            <input 
-              className="input" 
-              placeholder="e.g. dxyz123"
-              value={cloudName}
-              onChange={(e) => setCloudName(e.target.value)}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-              API Key
-            </label>
-            <input 
-              className="input" 
-              placeholder="Cloudinary API Key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-              API Secret
-            </label>
-            <input 
-              type="password"
-              className="input" 
-              placeholder="••••••••••••"
-              value={apiSecret}
-              onChange={(e) => setApiSecret(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <button 
-          className="btn-primary" 
-          onClick={saveCloudinarySettings}
-          disabled={savingSettings}
-          style={{ width: 'fit-content', padding: '10px 24px' }}
-        >
-          {savingSettings ? 'Saving...' : 'Update Credentials'}
-        </button>
       </div>
 
       {/* Real User Management Table */}
