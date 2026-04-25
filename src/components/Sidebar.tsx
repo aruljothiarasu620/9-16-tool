@@ -186,33 +186,37 @@ export default function Sidebar() {
         
         <div style={{ padding: '24px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div className="card" style={{ padding: '20px', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px', color: 'var(--accent-light)' }}>Connect Your Website</h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Add InstaFlow widget to your site</p>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px', color: 'var(--accent-light)' }}>1. Connect Your Website</h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Embed the InstaFlow tracking widget.</p>
             <ol style={{ fontSize: '13px', color: 'var(--text-primary)', paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <li>Go to the <strong>Settings</strong> tab in the sidebar.</li>
-              <li>Copy your unique script snippet.</li>
-              <li>Paste it before the closing <code>&lt;/body&gt;</code> tag of your website.</li>
+              <li>Go to the <strong>Settings</strong> tab in the left sidebar.</li>
+              <li>Under the API section, copy your unique script snippet.</li>
+              <li>Open your website's source code (HTML).</li>
+              <li>Paste the snippet just before the closing <code>&lt;/body&gt;</code> tag of your website.</li>
             </ol>
           </div>
 
           <div className="card" style={{ padding: '20px', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px', color: '#1877F2' }}>Connect Facebook</h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Link your FB page for automation</p>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px', color: '#1877F2' }}>2. Connect Facebook</h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Authorize InstaFlow for your Facebook Pages.</p>
             <ol style={{ fontSize: '13px', color: 'var(--text-primary)', paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <li>Go to the <strong>Instagram</strong> tab.</li>
+              <li>Navigate to the <strong>Instagram</strong> tab from the sidebar.</li>
               <li>Click the <strong>Connect Facebook</strong> button.</li>
-              <li>Log in to your Facebook account.</li>
-              <li>Grant all required permissions for your Pages.</li>
+              <li>A Facebook popup will open. Log in to your Facebook account.</li>
+              <li>Select all the Facebook Pages you want to link.</li>
+              <li><strong>Crucial:</strong> Keep all permission toggles turned ON.</li>
+              <li>Click "Done". The page will refresh and your accounts will be securely saved!</li>
             </ol>
           </div>
 
           <div className="card" style={{ padding: '20px', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px', color: '#E1306C' }}>Connect Instagram</h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Link IG business account</p>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px', color: '#E1306C' }}>3. Connect Instagram</h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Link your IG account via Facebook.</p>
             <ol style={{ fontSize: '13px', color: 'var(--text-primary)', paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <li>Ensure your Instagram account is a <strong>Professional/Business</strong> account.</li>
-              <li>Link your Instagram account to a Facebook Page.</li>
-              <li>Connecting Facebook in the previous step will automatically detect and link your Instagram.</li>
+              <li>On your phone's Instagram app, go to Settings and switch your account to a <strong>Professional/Business Account</strong>.</li>
+              <li>On Facebook, go to your <strong>Page Settings &gt; Linked Accounts</strong>.</li>
+              <li>Link your Instagram Business account to your Facebook Page.</li>
+              <li>Once linked, follow the <strong>Connect Facebook</strong> steps above. InstaFlow will automatically detect and connect your Instagram!</li>
             </ol>
           </div>
         </div>
