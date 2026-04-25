@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { generateId } from '@/lib/utils';
 import { auth, saveUserDataToCloud } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 
 
 export default function InstagramPage() {
@@ -69,23 +68,29 @@ export default function InstagramPage() {
               if (!foundIg) {
                 setError("No connected Instagram Professional accounts found on your Facebook Pages. Make sure they are linked.");
               } else {
-                // ✅ PROPER FIX: Use onAuthStateChanged to wait for Firebase Auth
-                // to be definitively ready before saving. auth.currentUser is
-                // unreliable immediately after an OAuth redirect page load.
-                const saveToCloud = () => new Promise<void>((resolve) => {
-                  const unsubscribe = onAuthStateChanged(auth, async (user) => {
-                    unsubscribe(); // Only fire once
+                // ✅ RELIABLE SAVE: Poll for auth.currentUser with retries.
+                // onAuthStateChanged fires with null FIRST on page load (before
+                // Firebase restores the session), so using it with unsubscribe()
+                // was silently failing — it would unsubscribe on the null fire
+                // and never save. This retry loop waits until the user is ready.
+                (async () => {
+                  let saved = false;
+                  for (let attempt = 0; attempt < 20; attempt++) {
+                    const user = auth.currentUser;
                     if (user) {
                       const currentAccounts = useStore.getState().instagramAccounts;
                       await saveUserDataToCloud({ instagramAccounts: currentAccounts });
-                      console.log('✅ FB accounts saved to Firestore for', user.uid);
-                    } else {
-                      console.warn('⚠️ Not logged into Google — saved locally only.');
+                      console.log('✅ FB accounts saved to Firestore on attempt', attempt + 1);
+                      saved = true;
+                      break;
                     }
-                    resolve();
-                  });
-                });
-                saveToCloud().catch(err => console.error('Firestore save error:', err));
+                    // Wait 500ms before next attempt (max 10s total)
+                    await new Promise(r => setTimeout(r, 500));
+                  }
+                  if (!saved) {
+                    console.warn('⚠️ Could not save to Firestore — user was not authenticated after 10s.');
+                  }
+                })().catch(err => console.error('Firestore save error:', err));
               }
             } else {
                setError("No Facebook Pages found. You must create a Facebook Page and link it to your Instagram Business account.");

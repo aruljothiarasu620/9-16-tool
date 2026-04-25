@@ -8,9 +8,12 @@ import { useStore } from '@/lib/store';
 import { useRouter, usePathname } from 'next/navigation';
 
 const ADMIN_EMAIL = 'aruljothiarasu620@gmail.com';
-
-// Public routes that do NOT need login
 const PUBLIC_ROUTES = ['/privacy'];
+
+// Module-level: track which UID we already loaded data for.
+// This prevents AuthGuard from reloading OLD Firestore data and
+// overwriting freshly-connected FB accounts on navigation/re-render.
+let firestoreLoadedForUid: string | null = null;
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -25,38 +28,45 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       setUser(firebaseUser);
 
       if (firebaseUser) {
-        // Load their Firestore data into the store
-        try {
-          const docRef = doc(db, 'users', firebaseUser.uid);
-          const snap = await getDoc(docRef);
-          if (snap.exists()) {
-            const data = snap.data();
-            useStore.setState({
-              instagramAccounts: data.instagramAccounts || [],
-              scenarios: data.scenarios || [],
-            });
+        // Load Firestore data ONCE per login session.
+        // We track the UID to ensure we never overwrite freshly-saved data
+        // on navigation (which used to re-trigger this with old data).
+        if (firestoreLoadedForUid !== firebaseUser.uid) {
+          firestoreLoadedForUid = firebaseUser.uid;
+          try {
+            const docRef = doc(db, 'users', firebaseUser.uid);
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+              const data = snap.data();
+              useStore.setState({
+                instagramAccounts: data.instagramAccounts || [],
+                scenarios: data.scenarios || [],
+              });
+            }
+          } catch (err) {
+            console.error('AuthGuard: Firestore load error', err);
           }
-        } catch (err) {
-          console.error('AuthGuard: Firestore load error', err);
         }
 
-        // Admin routing: if admin user is not on /admin, redirect there
+        // Admin routing
         if (firebaseUser.email === ADMIN_EMAIL && pathname === '/') {
           router.replace('/admin');
         }
-        // Non-admin on /admin? Kick them out
         if (firebaseUser.email !== ADMIN_EMAIL && pathname === '/admin') {
           router.replace('/');
         }
       } else {
-        // Logged out — clear store
+        // Logged out — clear store and reset the loaded flag
+        firestoreLoadedForUid = null;
         useStore.setState({ instagramAccounts: [], scenarios: [] });
       }
 
       setLoading(false);
     });
     return () => unsub();
-  }, [pathname]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ← Empty deps: register auth listener ONCE, never re-subscribe on navigation
+
 
   const handleGoogleLogin = async () => {
     setSigningIn(true);
