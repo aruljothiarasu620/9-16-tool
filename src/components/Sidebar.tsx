@@ -19,25 +19,32 @@ export default function Sidebar() {
   const pathname = usePathname();
   const store = useStore();
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // 1. Listen to Auth Changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       if (user) {
-        // Fetch their cloud data
+        setIsDataLoaded(false); // Prevent saving until we finish loading
+        
         const docRef = doc(db, 'users', user.uid);
         const snap = await getDoc(docRef);
+        
         if (snap.exists()) {
           const data = snap.data();
           useStore.setState({ instagramAccounts: data.instagramAccounts || [], scenarios: data.scenarios || [] });
         } else {
           // First time logging in: save their current local data to the cloud
-          await setDoc(docRef, { instagramAccounts: store.instagramAccounts, scenarios: store.scenarios });
+          const currentState = useStore.getState();
+          await setDoc(docRef, { instagramAccounts: currentState.instagramAccounts, scenarios: currentState.scenarios });
         }
+        
+        setIsDataLoaded(true); // Now it's safe to auto-save changes
       } else {
         // Logged out: Clear their sensitive data from the screen
         useStore.setState({ instagramAccounts: [], scenarios: [] });
+        setIsDataLoaded(false);
       }
     });
     return () => unsubscribe();
@@ -45,14 +52,14 @@ export default function Sidebar() {
 
   // 2. Auto-Save to Cloud when they make changes
   useEffect(() => {
-    if (firebaseUser) {
+    if (firebaseUser && isDataLoaded) {
       const timer = setTimeout(() => {
         const docRef = doc(db, 'users', firebaseUser.uid);
         setDoc(docRef, { instagramAccounts: store.instagramAccounts, scenarios: store.scenarios }, { merge: true });
-      }, 1000); // Debounce to avoid spamming the database
+      }, 1500); // Debounce to avoid spamming the database
       return () => clearTimeout(timer);
     }
-  }, [store.instagramAccounts, store.scenarios, firebaseUser]);
+  }, [store.instagramAccounts, store.scenarios, firebaseUser, isDataLoaded]);
 
   return (
     <aside style={{
