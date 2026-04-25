@@ -43,8 +43,15 @@ export default function DashboardPage() {
   return (
     <div style={{ padding: '32px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
-        <div>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '32px',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div style={{ flex: '1 1 300px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '6px' }}
             className="gradient-text">
             Automation Scenarios
@@ -54,7 +61,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <button className="btn-primary" onClick={() => setShowCreate(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 'fit-content' }}>
           <span>+</span> New Scenario
         </button>
       </div>

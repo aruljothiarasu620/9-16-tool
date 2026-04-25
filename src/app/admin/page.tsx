@@ -54,8 +54,8 @@ export default function AdminPage() {
   return (
     <div style={{ padding: '32px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '6px' }} className="gradient-text">
+      <div style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '0' }} className="gradient-text">
           🛡️ Admin Panel
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
