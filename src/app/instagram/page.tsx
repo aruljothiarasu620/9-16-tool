@@ -32,6 +32,9 @@ export default function InstagramPage() {
       const token = params.get('long_lived_token') || params.get('access_token');
       
       if (token) {
+        // Prevent Firebase from overwriting this token during the page load race condition
+        sessionStorage.setItem('fb_oauth_in_progress', 'true');
+        
         // Clean up the URL
         window.history.replaceState(null, '', window.location.pathname);
         

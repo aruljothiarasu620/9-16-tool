@@ -28,26 +28,48 @@ export default function Sidebar() {
       setFirebaseUser(user);
       
       if (user) {
-        // 1. Download Cloud Data
-        const docRef = doc(db, 'users', user.uid);
-        const snap = await getDoc(docRef);
-        
-        if (snap.exists()) {
-          const data = snap.data();
-          useStore.setState({ instagramAccounts: data.instagramAccounts || [], scenarios: data.scenarios || [] });
-        } else {
-          // New user
-          const currentState = useStore.getState();
-          await setDoc(docRef, { instagramAccounts: currentState.instagramAccounts, scenarios: currentState.scenarios });
+        try {
+          // Check if we are returning from a Facebook login redirect!
+          // If we are, DO NOT download from the cloud right now, because it will overwrite the token we are about to save!
+          const isReturningFromFacebook = typeof window !== 'undefined' && 
+            (window.location.hash.includes('access_token') || sessionStorage.getItem('fb_oauth_in_progress') === 'true');
+          
+          const docRef = doc(db, 'users', user.uid);
+          
+          if (!isReturningFromFacebook) {
+            // Normal Page Load: Download Cloud Data
+            const snap = await getDoc(docRef);
+            
+            if (snap.exists()) {
+              const data = snap.data();
+              useStore.setState({ instagramAccounts: data.instagramAccounts || [], scenarios: data.scenarios || [] });
+            } else {
+              // New user
+              const currentState = useStore.getState();
+              await setDoc(docRef, { instagramAccounts: currentState.instagramAccounts, scenarios: currentState.scenarios });
+            }
+          } else {
+            // We successfully protected the token! Clear the flag so future reloads work normally.
+            sessionStorage.removeItem('fb_oauth_in_progress');
+          }
+
+          // 2. Start Native Auto-Sync
+          unsubscribeStore = useStore.subscribe((state) => {
+            // Native Zustand subscription guarantees we never miss an update
+            setDoc(docRef, { instagramAccounts: state.instagramAccounts, scenarios: state.scenarios }, { merge: true })
+              .catch(err => {
+                console.error("Firebase Sync Error:", err);
+                if (err.message.includes("permission")) {
+                   alert("⚠️ Database Error: Your Firebase Database is in 'Production Mode' so it is blocking the app from saving your data! Please go to Firebase -> Firestore -> Rules and change 'allow read, write: if false;' to 'allow read, write: if true;'");
+                }
+              });
+          });
+        } catch (err: any) {
+          console.error("Firebase Load Error:", err);
+          if (err.message.includes("permission")) {
+             alert("⚠️ Database Error: Your Firebase Database is blocking data loads due to Rules. Please change Firestore Rules to allow read/write.");
+          }
         }
-
-        // 2. Start Native Auto-Sync
-        unsubscribeStore = useStore.subscribe((state) => {
-          // Native Zustand subscription guarantees we never miss an update
-          setDoc(docRef, { instagramAccounts: state.instagramAccounts, scenarios: state.scenarios }, { merge: true })
-            .catch(err => console.error("Firebase Sync Error:", err));
-        });
-
       } else {
         // Logged out
         if (unsubscribeStore) unsubscribeStore();
