@@ -67,7 +67,7 @@ export default function Sidebar() {
         <div style={{ padding: '0 8px 28px', borderBottom: '1px solid var(--border)', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img 
-            src="/logo.jpeg" 
+            src="/logo.jpg" 
             alt="Logo" 
             style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover' }} 
           />
