@@ -19,15 +19,16 @@ export default function Sidebar() {
   const pathname = usePathname();
   const store = useStore();
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // 1. Listen to Auth Changes
+  // Robust Auth & Sync Logic
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubscribeStore: (() => void) | undefined;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
+      
       if (user) {
-        setIsDataLoaded(false); // Prevent saving until we finish loading
-        
+        // 1. Download Cloud Data
         const docRef = doc(db, 'users', user.uid);
         const snap = await getDoc(docRef);
         
@@ -35,31 +36,30 @@ export default function Sidebar() {
           const data = snap.data();
           useStore.setState({ instagramAccounts: data.instagramAccounts || [], scenarios: data.scenarios || [] });
         } else {
-          // First time logging in: save their current local data to the cloud
+          // New user
           const currentState = useStore.getState();
           await setDoc(docRef, { instagramAccounts: currentState.instagramAccounts, scenarios: currentState.scenarios });
         }
-        
-        setIsDataLoaded(true); // Now it's safe to auto-save changes
+
+        // 2. Start Native Auto-Sync
+        unsubscribeStore = useStore.subscribe((state) => {
+          // Native Zustand subscription guarantees we never miss an update
+          setDoc(docRef, { instagramAccounts: state.instagramAccounts, scenarios: state.scenarios }, { merge: true })
+            .catch(err => console.error("Firebase Sync Error:", err));
+        });
+
       } else {
-        // Logged out: Clear their sensitive data from the screen
+        // Logged out
+        if (unsubscribeStore) unsubscribeStore();
         useStore.setState({ instagramAccounts: [], scenarios: [] });
-        setIsDataLoaded(false);
       }
     });
-    return () => unsubscribe();
-  }, []); // Only run once on mount
 
-  // 2. Auto-Save to Cloud when they make changes
-  useEffect(() => {
-    if (firebaseUser && isDataLoaded) {
-      const timer = setTimeout(() => {
-        const docRef = doc(db, 'users', firebaseUser.uid);
-        setDoc(docRef, { instagramAccounts: store.instagramAccounts, scenarios: store.scenarios }, { merge: true });
-      }, 1500); // Debounce to avoid spamming the database
-      return () => clearTimeout(timer);
-    }
-  }, [store.instagramAccounts, store.scenarios, firebaseUser, isDataLoaded]);
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeStore) unsubscribeStore();
+    };
+  }, []);
 
   return (
     <aside style={{
