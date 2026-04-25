@@ -20,6 +20,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const store = useStore();
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   // Just track auth state — AuthGuard handles data loading
   useEffect(() => {
@@ -86,6 +87,26 @@ export default function Sidebar() {
             )}
           </Link>
         ))}
+        {/* Help & Guide — visible to all */}
+        <button
+          onClick={() => setIsHelpOpen(true)}
+          className={`nav-item ${isHelpOpen ? 'active' : ''}`}
+          style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', padding: '10px 12px' }}
+        >
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px' }}>
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </span>
+          <span>Help & Guide</span>
+          <span style={{
+            marginLeft: 'auto', background: '#7c3aed', color: 'white',
+            fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '10px'
+          }}>NEW</span>
+        </button>
+
         {/* Admin link — only visible for admin email */}
         {isAdmin && (
           <Link
@@ -133,6 +154,67 @@ export default function Sidebar() {
           <Link href="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none', opacity: 0.7, fontSize: '11px' }}>
             Privacy Policy
           </Link>
+        </div>
+      </div>
+
+      {/* Help & Guide Side Panel */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        maxWidth: '340px',
+        background: '#13101f',
+        borderLeft: '1px solid var(--border)',
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: isHelpOpen ? '-4px 0 24px rgba(0,0,0,0.5)' : 'none',
+        transform: isHelpOpen ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.3s ease-out, box-shadow 0.3s ease-out',
+      }}>
+        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Help & Guide</h2>
+          <button onClick={() => setIsHelpOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        
+        <div style={{ padding: '24px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="card" style={{ padding: '20px', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px', color: 'var(--accent-light)' }}>Connect Your Website</h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Add InstaFlow widget to your site</p>
+            <ol style={{ fontSize: '13px', color: 'var(--text-primary)', paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <li>Go to the <strong>Settings</strong> tab in the sidebar.</li>
+              <li>Copy your unique script snippet.</li>
+              <li>Paste it before the closing <code>&lt;/body&gt;</code> tag of your website.</li>
+            </ol>
+          </div>
+
+          <div className="card" style={{ padding: '20px', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px', color: '#1877F2' }}>Connect Facebook</h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Link your FB page for automation</p>
+            <ol style={{ fontSize: '13px', color: 'var(--text-primary)', paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <li>Go to the <strong>Instagram</strong> tab.</li>
+              <li>Click the <strong>Connect Facebook</strong> button.</li>
+              <li>Log in to your Facebook account.</li>
+              <li>Grant all required permissions for your Pages.</li>
+            </ol>
+          </div>
+
+          <div className="card" style={{ padding: '20px', borderRadius: '12px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '4px', color: '#E1306C' }}>Connect Instagram</h3>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Link IG business account</p>
+            <ol style={{ fontSize: '13px', color: 'var(--text-primary)', paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <li>Ensure your Instagram account is a <strong>Professional/Business</strong> account.</li>
+              <li>Link your Instagram account to a Facebook Page.</li>
+              <li>Connecting Facebook in the previous step will automatically detect and link your Instagram.</li>
+            </ol>
+          </div>
         </div>
       </div>
     </aside>
