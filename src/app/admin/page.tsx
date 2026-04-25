@@ -97,9 +97,9 @@ export default function AdminPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', textAlign: 'left' }}>
-                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>User ID / Database Doc</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>User Profile</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Connected IG Accounts</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>Settings / Automations</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>Recent Activity</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Status</th>
                 </tr>
               </thead>
@@ -111,28 +111,54 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ) : (
-                  allUsers.map((u) => (
-                    <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '16px' }}>
-                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{u.id}</div>
-                      </td>
-                      <td style={{ padding: '16px' }}>
-                        {u.instagramAccounts?.length > 0 ? (
-                          <span className="badge" style={{ background: 'rgba(225, 48, 108, 0.1)', color: '#E1306C', border: '1px solid rgba(225, 48, 108, 0.2)' }}>
-                            {u.instagramAccounts.length} Connected
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>None</span>
-                        )}
-                      </td>
-                      <td style={{ padding: '16px', color: 'var(--text-muted)' }}>
-                        {u.settings ? 'Custom Settings' : 'Default'} · {u.runLogs?.length || 0} Runs
-                      </td>
-                      <td style={{ padding: '16px' }}>
-                        <span className="badge badge-active"><span className="status-dot active"></span> Active</span>
-                      </td>
-                    </tr>
-                  ))
+                  allUsers.map((u) => {
+                    const latestLog = u.runLogs?.[0];
+                    return (
+                      <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                            {u.name || 'Unknown User'}
+                          </div>
+                          <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '2px' }}>
+                            {u.email || 'No email saved'}
+                          </div>
+                          <div style={{ color: 'var(--text-muted)', fontSize: '10px', opacity: 0.7 }}>
+                            ID: {u.id}
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          {u.instagramAccounts?.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              {u.instagramAccounts.map((acc: any) => (
+                                <span key={acc.id} className="badge" style={{ background: 'rgba(225, 48, 108, 0.1)', color: '#E1306C', border: '1px solid rgba(225, 48, 108, 0.2)', width: 'fit-content' }}>
+                                  @{acc.username}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)' }}>None</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '16px', color: 'var(--text-muted)' }}>
+                          {latestLog ? (
+                            <div>
+                              <div style={{ color: latestLog.status === 'success' ? '#10b981' : '#ef4444', fontWeight: 500, marginBottom: '4px' }}>
+                                {latestLog.status === 'success' ? '✓' : '✗'} {latestLog.modulesExecuted?.join(', ') || 'Unknown Execution'}
+                              </div>
+                              <div style={{ fontSize: '11px' }}>
+                                {new Date(latestLog.timestamp).toLocaleString()}
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ opacity: 0.5 }}>No recent activity</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          <span className="badge badge-active"><span className="status-dot active"></span> Active</span>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

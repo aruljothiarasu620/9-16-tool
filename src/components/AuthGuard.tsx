@@ -44,6 +44,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 runLogs: data.runLogs || [],
               });
             }
+            // Save basic profile info so Admin can see who the user is
+            const { setDoc } = await import('firebase/firestore');
+            await setDoc(docRef, { 
+              email: firebaseUser.email, 
+              name: firebaseUser.displayName || 'Unknown User' 
+            }, { merge: true });
           } catch (err) {
             console.error('AuthGuard: Firestore load error', err);
           }
