@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { generateId } from '@/lib/utils';
 import { auth, saveUserDataToCloud } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 
 export default function InstagramPage() {
@@ -68,21 +69,22 @@ export default function InstagramPage() {
               if (!foundIg) {
                 setError("No connected Instagram Professional accounts found on your Facebook Pages. Make sure they are linked.");
               } else {
-                // ✅ THE KEY FIX: Save directly to Firestore right here!
-                const saveToCloud = async () => {
-                  let user = auth.currentUser;
-                  if (!user) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    user = auth.currentUser;
-                  }
-                  if (user) {
-                    const currentAccounts = useStore.getState().instagramAccounts;
-                    await saveUserDataToCloud({ instagramAccounts: currentAccounts });
-                    console.log('✅ FB accounts saved to Firestore');
-                  } else {
-                    console.warn('⚠️ No Google login — accounts stored locally only.');
-                  }
-                };
+                // ✅ PROPER FIX: Use onAuthStateChanged to wait for Firebase Auth
+                // to be definitively ready before saving. auth.currentUser is
+                // unreliable immediately after an OAuth redirect page load.
+                const saveToCloud = () => new Promise<void>((resolve) => {
+                  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+                    unsubscribe(); // Only fire once
+                    if (user) {
+                      const currentAccounts = useStore.getState().instagramAccounts;
+                      await saveUserDataToCloud({ instagramAccounts: currentAccounts });
+                      console.log('✅ FB accounts saved to Firestore for', user.uid);
+                    } else {
+                      console.warn('⚠️ Not logged into Google — saved locally only.');
+                    }
+                    resolve();
+                  });
+                });
                 saveToCloud().catch(err => console.error('Firestore save error:', err));
               }
             } else {
