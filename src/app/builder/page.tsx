@@ -226,6 +226,45 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
     const executedModules: string[] = [];
     let success = true;
 
+    // --- SMART REFRESH ENGINE: UNLIMITED TOKEN FIX ---
+    addLog('🔄 Checking & refreshing tokens for unlimited session...', 'info');
+    try {
+      const uniqueAccountIds = Array.from(new Set(
+        scenario.modules
+          .map(m => m.config.accountId as string)
+          .filter(Boolean)
+      ));
+      
+      for (const accId of uniqueAccountIds) {
+        const acc = instagramAccounts.find(a => a.id === accId);
+        if (acc && acc.accessToken) {
+          const res = await fetch('/api/instagram/exchange', {
+            method: 'POST',
+            body: JSON.stringify({ shortLivedToken: acc.accessToken })
+          });
+          const data = await res.json();
+          if (data.longLivedToken) {
+            // Update the store and Firestore with the new token
+            const updatedAccounts = instagramAccounts.map(a => 
+              a.id === accId ? { ...a, accessToken: data.longLivedToken } : a
+            );
+            useStore.setState({ instagramAccounts: updatedAccounts });
+            
+            // Sync to Firestore
+            const user = auth.currentUser;
+            if (user) {
+              const docRef = doc(db, 'users', user.uid);
+              await setDoc(docRef, { instagramAccounts: updatedAccounts }, { merge: true });
+            }
+            console.log(`✅ Token refreshed for @${acc.username}`);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('⚠️ Token refresh failed (using existing tokens):', err);
+    }
+    // ------------------------------------------------
+
     for (const module of scenario.modules) {
       const meta = MODULE_CONFIG[module.type];
       addLog(`⚙ Executing: ${meta.label}`, 'info');
