@@ -35,10 +35,26 @@ export default function InstagramPage() {
       window.history.replaceState(null, '', window.location.pathname);
       
       if (token) {
-        // Fetch the user's pages and connected Instagram accounts
-        fetch(`https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,instagram_business_account{name,followers_count,profile_picture_url,username}&access_token=${token}`)
-          .then(res => res.json())
-          .then(async data => {
+        // --- NEW: EXCHANGE FOR LONG-LIVED TOKEN ---
+        (async () => {
+          try {
+            const exchangeRes = await fetch('/api/instagram/exchange', {
+              method: 'POST',
+              body: JSON.stringify({ shortLivedToken: token })
+            });
+            const exchangeData = await exchangeRes.json();
+            
+            const finalToken = exchangeData.longLivedToken || token;
+            if (exchangeData.longLivedToken) {
+              console.log('✅ Successfully upgraded to 60-day token');
+            } else {
+              console.warn('⚠️ Could not upgrade token, using short-lived one:', exchangeData.error);
+            }
+
+            // Fetch the user's pages and connected Instagram accounts using the finalToken
+            const igRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,instagram_business_account{name,followers_count,profile_picture_url,username}&access_token=${finalToken}`);
+            const data = await igRes.json();
+
             if (data.error) {
               setError(data.error.message);
               setIsConnecting(false);
@@ -57,7 +73,7 @@ export default function InstagramPage() {
                       username: igAccount.username || page.name || 'Unknown',
                       profilePicture: igAccount.profile_picture_url || '',
                       followerCount: igAccount.followers_count || 0,
-                      accessToken: page.access_token || token,
+                      accessToken: page.access_token || finalToken, // Use page token if available, else finalToken
                       pageId: igAccount.id,
                       connectedAt: new Date().toISOString(),
                    };
@@ -69,55 +85,32 @@ export default function InstagramPage() {
               if (!foundIg) {
                 setError("No connected Instagram Professional accounts found on your Facebook Pages. Make sure they are linked.");
               } else {
-                // ✅ DIRECT FIRESTORE SAVE — no store dependency.
-                // We save newAccounts directly (not from the store) to avoid
-                // the race condition where AuthGuard overwrites the store with
-                // old Firestore data between addInstagramAccount and the save.
-                (async () => {
-                  const user = auth.currentUser;
-                  if (!user) {
-                    console.warn('⚠️ Not authenticated — cannot save to Firestore.');
-                    return;
-                  }
-                  try {
-                    const docRef = doc(db, 'users', user.uid);
-                    // Load existing data first, then merge the new accounts in
-                    const snap = await getDoc(docRef);
-                    const existing: any[] = snap.exists()
-                      ? (snap.data().instagramAccounts || [])
-                      : [];
-                    // Avoid duplicates by username
-                    const merged = [
-                      ...existing.filter(
-                        (e: any) => !newAccounts.some((n: any) => n.username === e.username)
-                      ),
-                      ...newAccounts,
-                    ];
-                    await setDoc(docRef, { instagramAccounts: merged }, { merge: true });
-                    // Also sync local store to match
-                    useStore.setState({ instagramAccounts: merged });
-                    console.log('✅ FB accounts saved to Firestore:', merged.length, 'accounts');
-                  } catch (err: any) {
-                    console.error('❌ Firestore save failed:', err);
-                    const msg = err?.message || String(err);
-                    if (msg.includes('permission') || msg.includes('PERMISSION_DENIED')) {
-                      setError('❌ Firebase permission error — go to Firebase Console → Firestore → Rules and set: allow read, write: if request.auth != null;');
-                    } else {
-                      setError(`Connected locally, but cloud save failed: ${msg}`);
-                    }
-                  }
-                })();
+                const user = auth.currentUser;
+                if (!user) {
+                  console.warn('⚠️ Not authenticated — cannot save to Firestore.');
+                  return;
+                }
+                const docRef = doc(db, 'users', user.uid);
+                const snap = await getDoc(docRef);
+                const existing: any[] = snap.exists() ? (snap.data().instagramAccounts || []) : [];
+                const merged = [
+                  ...existing.filter((e: any) => !newAccounts.some((n: any) => n.username === e.username)),
+                  ...newAccounts,
+                ];
+                await setDoc(docRef, { instagramAccounts: merged }, { merge: true });
+                useStore.setState({ instagramAccounts: merged });
+                console.log('✅ FB accounts saved to Firestore:', merged.length, 'accounts');
               }
             } else {
                setError("No Facebook Pages found. You must create a Facebook Page and link it to your Instagram Business account.");
             }
-            setIsConnecting(false);
-          })
-          .catch(err => {
-            console.error('Fetch error:', err);
+          } catch (err: any) {
+            console.error('Connection error:', err);
             setError('Failed to fetch account data from Facebook.');
+          } finally {
             setIsConnecting(false);
-          });
+          }
+        })();
       } else {
         setIsConnecting(false);
       }
