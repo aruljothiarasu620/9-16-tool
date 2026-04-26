@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -14,15 +14,56 @@ export default function AdminPage() {
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [totalConnectedAccounts, setTotalConnectedAccounts] = useState(0);
 
+  // Meta Config Settings
+  const [metaAppId, setMetaAppId] = useState('');
+  const [metaAppSecret, setMetaAppSecret] = useState('');
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (u?.email === 'aruljothiarasu620@gmail.com') {
         fetchAllUsers();
+        fetchMetaConfig();
       }
     });
     return () => unsub();
   }, []);
+
+  const fetchMetaConfig = async () => {
+    try {
+      const docRef = doc(db, 'config', 'meta');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        setMetaAppId(data.appId || '');
+        setMetaAppSecret(data.appSecret || '');
+      }
+    } catch (err) {
+      console.error('Error fetching Meta config:', err);
+    }
+  };
+
+  const saveMetaConfig = async () => {
+    setSavingSettings(true);
+    setSaveStatus('idle');
+    try {
+      const docRef = doc(db, 'config', 'meta');
+      await setDoc(docRef, {
+        appId: metaAppId,
+        appSecret: metaAppSecret,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch (err) {
+      console.error('Error saving Meta config:', err);
+      setSaveStatus('error');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   const fetchAllUsers = async () => {
     try {
@@ -81,6 +122,58 @@ export default function AdminPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Meta Config Section */}
+      <div className="card" style={{ padding: '28px', marginBottom: '24px', border: '1px solid var(--accent-glow)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div>
+            <h2 style={{ fontWeight: 700, fontSize: '18px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#1877F2' }}>🛡️</span> Meta App Credentials (60-Day Token Fix)
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
+              Enter your App ID and Secret to make Instagram connections last for 2 months.
+            </p>
+          </div>
+          {saveStatus === 'success' && (
+            <span style={{ color: 'var(--success)', fontSize: '13px', fontWeight: 600 }}>✓ Saved Successfully</span>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
+              Meta App ID
+            </label>
+            <input 
+              className="input" 
+              placeholder="e.g. 123456789012345"
+              value={metaAppId}
+              onChange={(e) => setMetaAppId(e.target.value)}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
+              Meta App Secret
+            </label>
+            <input 
+              type="password"
+              className="input" 
+              placeholder="••••••••••••••••••••••••"
+              value={metaAppSecret}
+              onChange={(e) => setMetaAppSecret(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <button 
+          className="btn-primary" 
+          onClick={saveMetaConfig}
+          disabled={savingSettings}
+          style={{ width: 'fit-content', padding: '10px 24px' }}
+        >
+          {savingSettings ? 'Saving...' : 'Save Meta Config'}
+        </button>
       </div>
 
       {/* Real User Management Table */}
