@@ -20,6 +20,8 @@ import { useStore, Module, ModuleType } from '@/lib/store';
 import { MODULE_CONFIG, generateId, formatDate } from '@/lib/utils';
 import FlowNode from '@/components/FlowNode';
 import ModuleConfigPanel from '@/components/ModuleConfigPanel';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 const nodeTypes = { customNode: FlowNode };
 

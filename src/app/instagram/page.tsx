@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { generateId } from '@/lib/utils';
 import { auth, db } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 
@@ -38,6 +39,24 @@ export default function InstagramPage() {
         // --- NEW: EXCHANGE FOR LONG-LIVED TOKEN ---
         (async () => {
           try {
+            // Wait for Firebase Auth to fully initialize so we don't encounter null currentUser on redirect load
+            let user = auth.currentUser;
+            if (!user) {
+              user = await new Promise<any>((resolve) => {
+                const unsubscribe = onAuthStateChanged(auth, (u) => {
+                  unsubscribe();
+                  resolve(u);
+                });
+              });
+            }
+
+            if (!user) {
+              console.warn('⚠️ Auth initialization yielded no user.');
+              setError('You must be logged in to connect your Instagram account.');
+              setIsConnecting(false);
+              return;
+            }
+
             const exchangeRes = await fetch('/api/instagram/exchange', {
               method: 'POST',
               body: JSON.stringify({ shortLivedToken: token })
@@ -85,11 +104,6 @@ export default function InstagramPage() {
               if (!foundIg) {
                 setError("No connected Instagram Professional accounts found on your Facebook Pages. Make sure they are linked.");
               } else {
-                const user = auth.currentUser;
-                if (!user) {
-                  console.warn('⚠️ Not authenticated — cannot save to Firestore.');
-                  return;
-                }
                 const docRef = doc(db, 'users', user.uid);
                 const snap = await getDoc(docRef);
                 const existing: any[] = snap.exists() ? (snap.data().instagramAccounts || []) : [];
