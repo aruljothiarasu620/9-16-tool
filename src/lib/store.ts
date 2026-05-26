@@ -163,7 +163,13 @@ export const useStore = create<AppStore>()(
   (set) => ({
     scenarios: defaultScenarios,
     runLogs: defaultLogs,
-    instagramAccounts: [],
+    instagramAccounts: typeof window !== 'undefined' ? (() => {
+      try {
+        return JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+      } catch {
+        return [];
+      }
+    })() : [],
     activeScenarioId: null,
     settings: {
       facebookAppId: '2001458060448073',
@@ -296,23 +302,33 @@ export const useStore = create<AppStore>()(
       }),
 
     addInstagramAccount: (account) =>
-      set((state) => ({
-        instagramAccounts: [...state.instagramAccounts, account],
-      })),
+      set((state) => {
+        const nextAccounts = [...state.instagramAccounts, account];
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('instagramAccounts', JSON.stringify(nextAccounts));
+        }
+        return { instagramAccounts: nextAccounts };
+      }),
 
     removeInstagramAccount: (id) =>
-      set((state) => ({
-        instagramAccounts: state.instagramAccounts.filter(
-          (a) => a.id !== id
-        ),
-      })),
+      set((state) => {
+        const nextAccounts = state.instagramAccounts.filter((a) => a.id !== id);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('instagramAccounts', JSON.stringify(nextAccounts));
+        }
+        return { instagramAccounts: nextAccounts };
+      }),
 
     updateInstagramAccount: (id, updates) =>
-      set((state) => ({
-        instagramAccounts: state.instagramAccounts.map((a) =>
+      set((state) => {
+        const nextAccounts = state.instagramAccounts.map((a) =>
           a.id === id ? { ...a, ...updates } : a
-        ),
-      })),
+        );
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('instagramAccounts', JSON.stringify(nextAccounts));
+        }
+        return { instagramAccounts: nextAccounts };
+      }),
 
     updateSettings: (updates) =>
       set((state) => ({

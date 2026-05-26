@@ -113,6 +113,9 @@ export default function InstagramPage() {
                 ];
                 await setDoc(docRef, { instagramAccounts: merged }, { merge: true });
                 useStore.setState({ instagramAccounts: merged });
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('instagramAccounts', JSON.stringify(merged));
+                }
                 console.log('✅ FB accounts saved to Firestore:', merged.length, 'accounts');
               }
             } else {
@@ -120,7 +123,7 @@ export default function InstagramPage() {
             }
           } catch (err: any) {
             console.error('Connection error:', err);
-            setError('Failed to fetch account data from Facebook.');
+            setError(`Failed to connect: ${err.message || err}`);
           } finally {
             setIsConnecting(false);
           }
@@ -175,6 +178,9 @@ export default function InstagramPage() {
         const merged = [...existing.filter((e: any) => e.username !== newAcc.username), newAcc];
         await setDoc(docRef, { instagramAccounts: merged }, { merge: true });
         useStore.setState({ instagramAccounts: merged });
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('instagramAccounts', JSON.stringify(merged));
+        }
       } catch (err) {
         console.error('Manual connect save error:', err);
       }

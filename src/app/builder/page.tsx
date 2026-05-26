@@ -251,6 +251,9 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
               a.id === accId ? { ...a, accessToken: data.longLivedToken } : a
             );
             useStore.setState({ instagramAccounts: updatedAccounts });
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('instagramAccounts', JSON.stringify(updatedAccounts));
+            }
             
             // Sync to Firestore
             const user = auth.currentUser;

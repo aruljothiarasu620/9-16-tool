@@ -38,11 +38,39 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             const snap = await getDoc(docRef);
             if (snap.exists()) {
               const data = snap.data();
+              const firestoreAccounts = data.instagramAccounts || [];
+              let localAccounts = [];
+              try {
+                localAccounts = JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+              } catch (_) {}
+
+              // Merge Firestore and localStorage accounts, removing duplicates
+              const mergedAccounts = [...firestoreAccounts];
+              localAccounts.forEach((localAcc: any) => {
+                if (localAcc && localAcc.username && !mergedAccounts.some((fsAcc: any) => fsAcc.username === localAcc.username)) {
+                  mergedAccounts.push(localAcc);
+                }
+              });
+
+              // Update localStorage to match the final merged accounts list
+              try {
+                localStorage.setItem('instagramAccounts', JSON.stringify(mergedAccounts));
+              } catch (_) {}
+
               useStore.setState({
-                instagramAccounts: data.instagramAccounts || [],
+                instagramAccounts: mergedAccounts,
                 scenarios: data.scenarios || [],
                 runLogs: data.runLogs || [],
               });
+            } else {
+              // Document doesn't exist yet, but we can sync default store (which has localStorage accounts) to state
+              let localAccounts = [];
+              try {
+                localAccounts = JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+              } catch (_) {}
+              if (localAccounts.length > 0) {
+                useStore.setState({ instagramAccounts: localAccounts });
+              }
             }
             // Save basic profile info so Admin can see who the user is
             const { setDoc } = await import('firebase/firestore');
