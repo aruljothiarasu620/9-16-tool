@@ -57,6 +57,19 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 localStorage.setItem('instagramAccounts', JSON.stringify(mergedAccounts));
               } catch (_) {}
 
+              // Auto-sync local-only accounts to Firestore in the background
+              if (mergedAccounts.length > firestoreAccounts.length) {
+                (async () => {
+                  try {
+                    const { setDoc } = await import('firebase/firestore');
+                    await setDoc(docRef, { instagramAccounts: mergedAccounts }, { merge: true });
+                    console.log('✅ Local accounts successfully synced up to Firestore!');
+                  } catch (fsErr) {
+                    console.warn('⚠️ Background Firestore sync failed:', fsErr);
+                  }
+                })();
+              }
+
               useStore.setState({
                 instagramAccounts: mergedAccounts,
                 scenarios: data.scenarios || [],
