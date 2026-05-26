@@ -104,19 +104,33 @@ export default function InstagramPage() {
               if (!foundIg) {
                 setError("No connected Instagram Professional accounts found on your Facebook Pages. Make sure they are linked.");
               } else {
-                const docRef = doc(db, 'users', user.uid);
-                const snap = await getDoc(docRef);
-                const existing: any[] = snap.exists() ? (snap.data().instagramAccounts || []) : [];
-                const merged = [
-                  ...existing.filter((e: any) => !newAccounts.some((n: any) => n.username === e.username)),
-                  ...newAccounts,
-                ];
-                await setDoc(docRef, { instagramAccounts: merged }, { merge: true });
+                let merged = [...newAccounts];
+                try {
+                  const docRef = doc(db, 'users', user.uid);
+                  const snap = await getDoc(docRef);
+                  const existing: any[] = snap.exists() ? (snap.data().instagramAccounts || []) : [];
+                  merged = [
+                    ...existing.filter((e: any) => !newAccounts.some((n: any) => n.username === e.username)),
+                    ...newAccounts,
+                  ];
+                  await setDoc(docRef, { instagramAccounts: merged }, { merge: true });
+                  console.log('✅ FB accounts saved to Firestore:', merged.length, 'accounts');
+                } catch (dbErr) {
+                  console.warn('⚠️ Firestore sync failed, using localStorage fallback:', dbErr);
+                  let localExisting: any[] = [];
+                  try {
+                    localExisting = JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+                  } catch (_) {}
+                  merged = [
+                    ...localExisting.filter((e: any) => !newAccounts.some((n: any) => n.username === e.username)),
+                    ...newAccounts,
+                  ];
+                }
+
                 useStore.setState({ instagramAccounts: merged });
                 if (typeof window !== 'undefined') {
                   localStorage.setItem('instagramAccounts', JSON.stringify(merged));
                 }
-                console.log('✅ FB accounts saved to Firestore:', merged.length, 'accounts');
               }
             } else {
                setError("No Facebook Pages found. You must create a Facebook Page and link it to your Instagram Business account.");
@@ -168,22 +182,28 @@ export default function InstagramPage() {
       connectedAt: new Date().toISOString(),
     };
     addInstagramAccount(newAcc);
-    // Direct Firestore save
+    // Direct Firestore save with localStorage fallback
     const user = auth.currentUser;
+    let merged = [newAcc];
     if (user) {
       try {
         const docRef = doc(db, 'users', user.uid);
         const snap = await getDoc(docRef);
         const existing: any[] = snap.exists() ? (snap.data().instagramAccounts || []) : [];
-        const merged = [...existing.filter((e: any) => e.username !== newAcc.username), newAcc];
+        merged = [...existing.filter((e: any) => e.username !== newAcc.username), newAcc];
         await setDoc(docRef, { instagramAccounts: merged }, { merge: true });
-        useStore.setState({ instagramAccounts: merged });
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('instagramAccounts', JSON.stringify(merged));
-        }
       } catch (err) {
-        console.error('Manual connect save error:', err);
+        console.warn('⚠️ Manual connect Firestore save failed, using local fallback:', err);
+        let localExisting: any[] = [];
+        try {
+          localExisting = JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+        } catch (_) {}
+        merged = [...localExisting.filter((e: any) => e.username !== newAcc.username), newAcc];
       }
+    }
+    useStore.setState({ instagramAccounts: merged });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('instagramAccounts', JSON.stringify(merged));
     }
     setManualToken('');
     setManualUsername('');

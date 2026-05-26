@@ -80,6 +80,14 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             }, { merge: true });
           } catch (err) {
             console.error('AuthGuard: Firestore load error', err);
+            // Fallback: even if Firestore load fails (e.g. permission rules), load from localStorage so connected accounts persist!
+            let localAccounts = [];
+            try {
+              localAccounts = JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+            } catch (_) {}
+            if (localAccounts.length > 0) {
+              useStore.setState({ instagramAccounts: localAccounts });
+            }
           }
         }
 
