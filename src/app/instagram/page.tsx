@@ -229,7 +229,7 @@ export default function InstagramPage() {
   };
 
   return (
-    <div style={{ padding: '32px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
+    <div className="instagram-container">
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '6px' }} className="gradient-text">
@@ -283,7 +283,7 @@ export default function InstagramPage() {
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {instagramAccounts.map((account) => (
-              <div key={account.id} className="card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div key={account.id} className="card account-card">
                 {/* Avatar */}
                 <div style={{
                   width: '56px', height: '56px',
@@ -320,7 +320,7 @@ export default function InstagramPage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <div className="account-card-actions" style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                   <div style={{
                     display: 'flex', flexDirection: 'column', gap: '6px',
                     fontSize: '12px', textAlign: 'center',
@@ -362,7 +362,7 @@ export default function InstagramPage() {
       )}
 
       {/* Connect buttons */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', maxWidth: '700px' }}>
+      <div className="connect-grid">
         {/* Facebook OAuth button */}
         <div className="card" style={{ padding: '28px', textAlign: 'center' }}>
           <div style={{ fontSize: '40px', marginBottom: '12px' }}>📱</div>
@@ -445,7 +445,7 @@ export default function InstagramPage() {
       {/* Post capability overview */}
       <div style={{ marginTop: '40px' }}>
         <h2 style={{ fontWeight: 700, fontSize: '16px', marginBottom: '16px' }}>What You Can Automate</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+        <div className="capabilities-grid">
           {[
             { icon: '📸', title: 'Single Image Post', desc: 'Post a single image with caption and hashtags' },
             { icon: '🎠', title: 'Carousel (up to 10)', desc: 'Post multiple images in a swipeable carousel' },

@@ -520,3 +520,53 @@ input:checked + .toggle-slider:before {
     display: flex;
   }
 }
+
+/* Instagram Connect Page Responsiveness */
+.instagram-container {
+  padding: 32px;
+  background: var(--bg-primary);
+  min-height: 100vh;
+}
+
+.connect-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  max-width: 700px;
+}
+
+.capabilities-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.account-card {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Mobile Media Queries for Instagram Connect Page */
+@media (max-width: 768px) {
+  .instagram-container {
+    padding: 20px 16px !important;
+  }
+  .connect-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .capabilities-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .account-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+  .account-card-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+    margin-top: 8px;
+  }
+}
