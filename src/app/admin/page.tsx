@@ -24,11 +24,12 @@ export default function AdminPage() {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (u?.email === 'aruljothiarasu620@gmail.com') {
-        fetchAllUsers();
+        fetchAllUsers(u);
         fetchMetaConfig();
       }
     });
     return () => unsub();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchMetaConfig = async () => {
@@ -65,28 +66,28 @@ export default function AdminPage() {
     }
   };
 
-  const fetchAllUsers = async () => {
+  const fetchAllUsers = async (currentUser: User) => {
     try {
-      const usersRef = collection(db, 'users');
-      const snapshot = await getDocs(usersRef);
-      
-      let usersList: any[] = [];
-      let igAccountCount = 0;
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        usersList.push({ id: doc.id, ...data });
-        
-        // Count how many IG accounts this user has connected
-        if (data.instagramAccounts && Array.isArray(data.instagramAccounts)) {
-          igAccountCount += data.instagramAccounts.length;
-        }
+      // Call the server-side API route — it can read all users regardless of Firestore rules
+      const res = await fetch('/api/admin/users', {
+        headers: {
+          'x-admin-uid': currentUser.uid,
+          'x-admin-email': currentUser.email || '',
+        },
       });
 
-      setAllUsers(usersList);
-      setTotalConnectedAccounts(igAccountCount);
+      if (!res.ok) {
+        const err = await res.json();
+        console.error('Admin API error:', err);
+        setLoadingData(false);
+        return;
+      }
+
+      const { users, totalIgAccounts } = await res.json();
+      setAllUsers(users);
+      setTotalConnectedAccounts(totalIgAccounts);
     } catch (error) {
-      console.error("Error fetching admin data:", error);
+      console.error('Error fetching admin data:', error);
     } finally {
       setLoadingData(false);
     }

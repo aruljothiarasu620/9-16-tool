@@ -4,6 +4,7 @@ import Sidebar from '@/components/Sidebar';
 import AuthGuard from '@/components/AuthGuard';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import MobileHeader from '@/components/MobileHeader';
+import MobileMainWrapper from '@/components/MobileMainWrapper';
 
 export const metadata: Metadata = {
   title: 'InstaFlow - Instagram Automation Builder',
@@ -30,22 +31,11 @@ export default function RootLayout({
       <body>
         <AuthGuard>
           <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
-            {/* Desktop sidebar — hidden on mobile via CSS */}
             <Sidebar />
-            {/* Mobile top header — shown only on mobile */}
             <MobileHeader />
-            <main
-              className="main-content"
-              style={{
-                flex: 1,
-                minHeight: '100vh',
-                marginLeft: '220px',
-                transition: 'margin-left 0.3s ease',
-              }}
-            >
+            <MobileMainWrapper>
               {children}
-            </main>
-            {/* Mobile bottom nav — shown only on mobile */}
+            </MobileMainWrapper>
             <MobileBottomNav />
           </div>
         </AuthGuard>
