@@ -10,9 +10,10 @@ import { useRouter, usePathname } from 'next/navigation';
 const ADMIN_EMAIL = 'aruljothiarasu620@gmail.com';
 const PUBLIC_ROUTES = ['/privacy'];
 
-// Module-level: track which UID we already loaded data for.
-// This prevents AuthGuard from reloading OLD Firestore data and
-// overwriting freshly-connected FB accounts on navigation/re-render.
+// UID-scoped localStorage key — NEVER shares data between different users
+const lsKey = (uid: string) => `ig_accounts_${uid}`;
+
+// Track which UID we've already loaded Firestore data for
 let firestoreLoadedForUid: string | null = null;
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -28,33 +29,47 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       setUser(firebaseUser);
 
       if (firebaseUser) {
-        // Load Firestore data ONCE per login session.
-        // We track the UID to ensure we never overwrite freshly-saved data
-        // on navigation (which used to re-trigger this with old data).
-        if (firestoreLoadedForUid !== firebaseUser.uid) {
-          firestoreLoadedForUid = firebaseUser.uid;
+        const uid = firebaseUser.uid;
+
+        // ── STEP 1: Clear any OTHER user's data from the Zustand store immediately ──
+        // This prevents a previous user's data from briefly showing for the new user
+        if (firestoreLoadedForUid !== uid) {
+          // Reset store to empty before loading new user's data
+          useStore.setState({ instagramAccounts: [], scenarios: [], runLogs: [] });
+        }
+
+        // ── STEP 2: Load THIS user's data from Firestore (once per session) ──
+        if (firestoreLoadedForUid !== uid) {
+          firestoreLoadedForUid = uid;
+
           try {
-            const docRef = doc(db, 'users', firebaseUser.uid);
+            const docRef = doc(db, 'users', uid);
             const snap = await getDoc(docRef);
+
             if (snap.exists()) {
               const data = snap.data();
               const firestoreAccounts = data.instagramAccounts || [];
-              let localAccounts = [];
+
+              // Read from UID-scoped localStorage key ONLY
+              let localAccounts: any[] = [];
               try {
-                localAccounts = JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+                localAccounts = JSON.parse(localStorage.getItem(lsKey(uid)) || '[]');
               } catch (_) {}
 
-              // Merge Firestore and localStorage accounts, removing duplicates
+              // Merge: Firestore is source of truth, local fills gaps
               const mergedAccounts = [...firestoreAccounts];
               localAccounts.forEach((localAcc: any) => {
-                if (localAcc && localAcc.username && !mergedAccounts.some((fsAcc: any) => fsAcc.username === localAcc.username)) {
+                if (
+                  localAcc?.username &&
+                  !mergedAccounts.some((fsAcc: any) => fsAcc.username === localAcc.username)
+                ) {
                   mergedAccounts.push(localAcc);
                 }
               });
 
-              // Update localStorage to match the final merged accounts list
+              // Persist merged list to UID-scoped localStorage
               try {
-                localStorage.setItem('instagramAccounts', JSON.stringify(mergedAccounts));
+                localStorage.setItem(lsKey(uid), JSON.stringify(mergedAccounts));
               } catch (_) {}
 
               // Auto-sync local-only accounts to Firestore in the background
@@ -63,7 +78,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                   try {
                     const { setDoc } = await import('firebase/firestore');
                     await setDoc(docRef, { instagramAccounts: mergedAccounts }, { merge: true });
-                    console.log('✅ Local accounts successfully synced up to Firestore!');
+                    console.log('✅ Synced local-only accounts to Firestore');
                   } catch (fsErr) {
                     console.warn('⚠️ Background Firestore sync failed:', fsErr);
                   }
@@ -76,27 +91,29 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 runLogs: data.runLogs || [],
               });
             } else {
-              // Document doesn't exist yet, but we can sync default store (which has localStorage accounts) to state
-              let localAccounts = [];
+              // New user — load from their UID-scoped localStorage only
+              let localAccounts: any[] = [];
               try {
-                localAccounts = JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+                localAccounts = JSON.parse(localStorage.getItem(lsKey(uid)) || '[]');
               } catch (_) {}
               if (localAccounts.length > 0) {
                 useStore.setState({ instagramAccounts: localAccounts });
               }
             }
-            // Save basic profile info so Admin can see who the user is
+
+            // Save basic profile info for Admin panel
             const { setDoc } = await import('firebase/firestore');
-            await setDoc(docRef, { 
-              email: firebaseUser.email, 
-              name: firebaseUser.displayName || 'Unknown User' 
-            }, { merge: true });
+            await setDoc(
+              doc(db, 'users', uid),
+              { email: firebaseUser.email, name: firebaseUser.displayName || 'Unknown User' },
+              { merge: true }
+            );
           } catch (err) {
             console.error('AuthGuard: Firestore load error', err);
-            // Fallback: even if Firestore load fails (e.g. permission rules), load from localStorage so connected accounts persist!
-            let localAccounts = [];
+            // Fallback: load from THIS USER's UID-scoped localStorage only
+            let localAccounts: any[] = [];
             try {
-              localAccounts = JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+              localAccounts = JSON.parse(localStorage.getItem(lsKey(uid)) || '[]');
             } catch (_) {}
             if (localAccounts.length > 0) {
               useStore.setState({ instagramAccounts: localAccounts });
@@ -112,17 +129,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           router.replace('/');
         }
       } else {
-        // Logged out — clear store and reset the loaded flag
+        // Logged out — wipe store and reset UID tracker
         firestoreLoadedForUid = null;
         useStore.setState({ instagramAccounts: [], scenarios: [], runLogs: [] });
+        // NOTE: We do NOT clear localStorage here — it's UID-scoped so it's safe
       }
 
       setLoading(false);
     });
     return () => unsub();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ← Empty deps: register auth listener ONCE, never re-subscribe on navigation
-
+  }, []);
 
   const handleGoogleLogin = async () => {
     setSigningIn(true);
@@ -135,7 +152,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Show spinner while Firebase restores session
   if (loading) {
     return (
       <div style={{
@@ -154,12 +170,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Public routes: always accessible
   if (PUBLIC_ROUTES.includes(pathname)) {
     return <>{children}</>;
   }
 
-  // Not logged in: show full-screen Google Sign-In overlay
   if (!user) {
     return (
       <div style={{
@@ -173,10 +187,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           borderRadius: '20px',
           padding: '48px 40px',
           width: '380px',
+          maxWidth: 'calc(100vw - 32px)',
           textAlign: 'center',
           boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
         }}>
-          {/* Logo */}
           <div style={{
             width: '64px', height: '64px',
             background: 'linear-gradient(135deg, #7c3aed, #db2777)',
@@ -241,6 +255,5 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Logged in — render children normally
   return <>{children}</>;
 }

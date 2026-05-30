@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { saveUserDataToCloud } from '@/lib/firebase';
+import { saveUserDataToCloud, auth } from '@/lib/firebase';
 
 export type ModuleType =
   | 'schedule'
@@ -163,13 +163,10 @@ export const useStore = create<AppStore>()(
   (set) => ({
     scenarios: defaultScenarios,
     runLogs: defaultLogs,
-    instagramAccounts: typeof window !== 'undefined' ? (() => {
-      try {
-        return JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
-      } catch {
-        return [];
-      }
-    })() : [],
+    // Always start with empty accounts — AuthGuard will load the correct
+    // user's data from Firestore + UID-scoped localStorage after auth resolves.
+    // This prevents a previous user's accounts briefly showing for a new user.
+    instagramAccounts: [],
     activeScenarioId: null,
     settings: {
       facebookAppId: '2001458060448073',
@@ -305,7 +302,8 @@ export const useStore = create<AppStore>()(
       set((state) => {
         const nextAccounts = [...state.instagramAccounts, account];
         if (typeof window !== 'undefined') {
-          localStorage.setItem('instagramAccounts', JSON.stringify(nextAccounts));
+          const key = auth.currentUser ? `ig_accounts_${auth.currentUser.uid}` : 'instagramAccounts';
+          localStorage.setItem(key, JSON.stringify(nextAccounts));
         }
         return { instagramAccounts: nextAccounts };
       }),
@@ -314,7 +312,8 @@ export const useStore = create<AppStore>()(
       set((state) => {
         const nextAccounts = state.instagramAccounts.filter((a) => a.id !== id);
         if (typeof window !== 'undefined') {
-          localStorage.setItem('instagramAccounts', JSON.stringify(nextAccounts));
+          const key = auth.currentUser ? `ig_accounts_${auth.currentUser.uid}` : 'instagramAccounts';
+          localStorage.setItem(key, JSON.stringify(nextAccounts));
         }
         return { instagramAccounts: nextAccounts };
       }),
@@ -325,7 +324,8 @@ export const useStore = create<AppStore>()(
           a.id === id ? { ...a, ...updates } : a
         );
         if (typeof window !== 'undefined') {
-          localStorage.setItem('instagramAccounts', JSON.stringify(nextAccounts));
+          const key = auth.currentUser ? `ig_accounts_${auth.currentUser.uid}` : 'instagramAccounts';
+          localStorage.setItem(key, JSON.stringify(nextAccounts));
         }
         return { instagramAccounts: nextAccounts };
       }),

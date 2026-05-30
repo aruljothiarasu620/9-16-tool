@@ -119,7 +119,7 @@ export default function InstagramPage() {
                   console.warn('⚠️ Firestore sync failed, using localStorage fallback:', dbErr);
                   let localExisting: any[] = [];
                   try {
-                    localExisting = JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+                    localExisting = JSON.parse(localStorage.getItem(`ig_accounts_${user.uid}`) || '[]');
                   } catch (_) {}
                   merged = [
                     ...localExisting.filter((e: any) => !newAccounts.some((n: any) => n.username === e.username)),
@@ -129,7 +129,7 @@ export default function InstagramPage() {
 
                 useStore.setState({ instagramAccounts: merged });
                 if (typeof window !== 'undefined') {
-                  localStorage.setItem('instagramAccounts', JSON.stringify(merged));
+                  localStorage.setItem(`ig_accounts_${user.uid}`, JSON.stringify(merged));
                 }
               }
             } else {
@@ -196,14 +196,15 @@ export default function InstagramPage() {
         console.warn('⚠️ Manual connect Firestore save failed, using local fallback:', err);
         let localExisting: any[] = [];
         try {
-          localExisting = JSON.parse(localStorage.getItem('instagramAccounts') || '[]');
+          localExisting = JSON.parse(localStorage.getItem(`ig_accounts_${user.uid}`) || '[]');
         } catch (_) {}
         merged = [...localExisting.filter((e: any) => e.username !== newAcc.username), newAcc];
       }
     }
     useStore.setState({ instagramAccounts: merged });
     if (typeof window !== 'undefined') {
-      localStorage.setItem('instagramAccounts', JSON.stringify(merged));
+      const key = user ? `ig_accounts_${user.uid}` : 'instagramAccounts';
+      localStorage.setItem(key, JSON.stringify(merged));
     }
     setManualToken('');
     setManualUsername('');
