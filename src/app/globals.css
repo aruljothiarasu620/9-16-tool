@@ -446,20 +446,195 @@ input:checked + .toggle-slider:before {
 }
 
 /* =========================================
-   DESKTOP (>768px): Sidebar layout
+   MOBILE BOTTOM NAV — hidden by default on desktop
    ========================================= */
-@media (min-width: 769px) {
-  .mobile-bottom-nav {
-    display: none !important;
-  }
-  .mobile-header {
-    display: none !important;
-  }
-  .mobile-nav-toggle {
-    display: none !important;
-  }
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  z-index: 500;
+  align-items: center;
+  justify-content: space-around;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+.mobile-nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 16px;
+  color: var(--text-muted);
+  text-decoration: none;
+  min-width: 60px;
+  position: relative;
+  transition: color 0.2s ease;
+  flex: 1;
+}
+
+.mobile-nav-tab-active {
+  color: var(--accent-light);
+}
+
+.mobile-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-nav-label {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+.mobile-nav-tab-active .mobile-nav-label {
+  font-weight: 600;
+}
+
+.mobile-nav-indicator {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 2px;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  border-radius: 2px;
+}
+
+.mobile-nav-dot {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  width: 7px;
+  height: 7px;
+  background: var(--success);
+  border-radius: 50%;
+  border: 1.5px solid var(--bg-card);
+}
+
+/* =========================================
+   MOBILE HEADER — hidden by default on desktop
+   ========================================= */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  z-index: 400;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.mobile-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-header-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.mobile-header-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.mobile-header-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.mobile-header-avatar {
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.mobile-menu-dropdown {
+  position: fixed;
+  top: 64px;
+  right: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  z-index: 900;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.15s ease;
+}
+
+.mobile-menu-user {
+  padding: 8px 4px 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.mobile-menu-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mobile-menu-email {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.mobile-menu-signout {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  font-family: inherit;
+}
+
+/* =========================================
+   DESKTOP (>768px): Sidebar layout
+   ========================================= */
 @media (max-width: 1024px) and (min-width: 769px) {
   .sidebar-container {
     width: 80px !important;
@@ -476,56 +651,49 @@ input:checked + .toggle-slider:before {
    MOBILE (<=768px): Bottom nav layout
    ========================================= */
 @media (max-width: 768px) {
-  /* Hide desktop sidebar completely on mobile */
+  /* Hide desktop sidebar on mobile */
   .sidebar-container {
     display: none !important;
   }
 
-  /* Show mobile bottom nav */
+  /* Show mobile components */
   .mobile-bottom-nav {
-    display: flex !important;
+    display: flex;
   }
 
-  /* Show mobile header */
   .mobile-header {
-    display: flex !important;
+    display: flex;
   }
 
-  /* Push content: below top header + above bottom nav */
+  /* Push content below header + above bottom nav */
   .main-content {
     margin-left: 0 !important;
-    padding-top: calc(56px + 16px) !important;  /* header height + gap */
-    padding-bottom: calc(64px + 16px) !important; /* bottom nav height + gap */
+    padding-top: 72px !important;
+    padding-bottom: 80px !important;
     padding-left: 16px !important;
     padding-right: 16px !important;
     width: 100% !important;
+    box-sizing: border-box !important;
   }
 
-  /* Responsive grids go single column */
+  /* Grids → single column */
   .responsive-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
   }
   .grid-cols-4 {
     grid-template-columns: 1fr !important;
   }
 
-  /* Cards get comfortable padding */
+  /* Cards */
   .card {
     border-radius: 14px;
   }
 
-  /* Buttons go full width on mobile */
+  /* Buttons */
   .btn-primary, .btn-secondary {
     padding: 12px 16px;
     font-size: 15px;
     border-radius: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .main-content {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
   }
 }
 
