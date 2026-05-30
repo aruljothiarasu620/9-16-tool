@@ -23,12 +23,10 @@ export async function GET(req: NextRequest) {
     const usersRef = collection(db, 'users');
     const snapshot = await getDocs(usersRef);
 
-    const users: any[] = [];
-    let totalIgAccounts = 0;
-
+    const rawUsers: any[] = [];
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      users.push({
+      rawUsers.push({
         id: docSnap.id,
         name: data.name || 'Unknown User',
         email: data.email || '',
@@ -36,10 +34,65 @@ export async function GET(req: NextRequest) {
         scenarios: data.scenarios || [],
         runLogs: data.runLogs || [],
       });
-      if (Array.isArray(data.instagramAccounts)) {
-        totalIgAccounts += data.instagramAccounts.length;
+    });
+
+    // ── DATABASE CLEANUP MIGRATION: Resolve Instagram Account cross-contamination ──
+    // Maps Instagram account username to the UID of the user who keeps it
+    const accountOwnership: Record<string, { email: string; userId: string }> = {};
+
+    // First Pass: Find and designate ownership.
+    // Rule: The admin (aruljothiarasu620@gmail.com) always owns their accounts.
+    // If multiple non-admin users have it, the first one seen (or oldest) owns it.
+    rawUsers.forEach((u) => {
+      if (Array.isArray(u.instagramAccounts)) {
+        u.instagramAccounts.forEach((acc: any) => {
+          if (acc && acc.username) {
+            const username = acc.username.toLowerCase();
+            const existing = accountOwnership[username];
+            
+            // If the account hasn't been mapped, or if this user is the admin (preempts non-admin ownership)
+            if (!existing || u.email === ADMIN_EMAIL) {
+              accountOwnership[username] = { email: u.email, userId: u.id };
+            }
+          }
+        });
       }
     });
+
+    // Second Pass: Filter out duplicate accounts from other users and sync back to Firestore
+    const users: any[] = [];
+    let totalIgAccounts = 0;
+
+    for (const u of rawUsers) {
+      let changed = false;
+      const cleanAccounts = u.instagramAccounts.filter((acc: any) => {
+        if (!acc || !acc.username) return false;
+        const username = acc.username.toLowerCase();
+        const owner = accountOwnership[username];
+        
+        // If this user is not the designated owner, filter it out!
+        if (owner && owner.userId !== u.id) {
+          changed = true;
+          return false;
+        }
+        return true;
+      });
+
+      if (changed) {
+        // Sync the cleaned-up list back to Firestore immediately to clean the DB
+        try {
+          const userDocRef = doc(db, 'users', u.id);
+          await setDoc(userDocRef, { instagramAccounts: cleanAccounts }, { merge: true });
+          console.log(`🧹 Auto-migrated: Cleaned up duplicate IG accounts from user ${u.email || u.id}`);
+        } catch (fsErr) {
+          console.error(`⚠️ Failed to sync cleaned accounts for ${u.id}:`, fsErr);
+        }
+        u.instagramAccounts = cleanAccounts;
+      }
+
+      users.push(u);
+      totalIgAccounts += cleanAccounts.length;
+    }
 
     return NextResponse.json({ users, totalIgAccounts });
   } catch (err: any) {
