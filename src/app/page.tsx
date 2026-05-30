@@ -41,18 +41,17 @@ export default function DashboardPage() {
   };
 
   return (
-    <div style={{ padding: '32px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh', padding: '32px' }} className="dashboard-page">
       {/* Header */}
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '32px',
-        flexWrap: 'wrap',
-        gap: '16px'
+        alignItems: 'flex-start', 
+        marginBottom: '28px',
+        gap: '16px',
       }}>
-        <div style={{ flex: '1 1 300px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '6px' }}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h1 style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 800, marginBottom: '6px' }}
             className="gradient-text">
             Automation Scenarios
           </h1>
@@ -61,13 +60,13 @@ export default function DashboardPage() {
           </p>
         </div>
         <button className="btn-primary" onClick={() => setShowCreate(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 'fit-content' }}>
-          <span>+</span> New Scenario
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <span>+</span> <span className="btn-label">New Scenario</span>
         </button>
       </div>
 
       {/* Stats Row */}
-      <div className="responsive-grid" style={{ marginBottom: '32px' }}>
+      <div className="responsive-grid stats-grid" style={{ marginBottom: '28px' }}>
         {[
           { label: 'Total Scenarios', value: stats.total, color: '#7c3aed', icon: '⚡' },
           { label: 'Active', value: stats.active, color: '#10b981', icon: '✅' },
@@ -125,9 +124,9 @@ export default function DashboardPage() {
             return (
               <div key={scenario.id} className="card animate-fade-in"
                 style={{ padding: '20px', animationDelay: `${i * 60}ms` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div className="scenario-card-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
                       <h3 style={{ fontWeight: 700, fontSize: '16px' }}>{scenario.name}</h3>
                       <span className={`badge ${scenario.status === 'active' ? 'badge-active' : 'badge-inactive'}`}>
                         <span className={`status-dot ${scenario.status}`} />
@@ -149,7 +148,7 @@ export default function DashboardPage() {
                       </div>
                     )}
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
+                  <div className="scenario-card-actions" style={{ display: 'flex', gap: '8px', marginLeft: '16px', flexShrink: 0 }}>
                     {/* Toggle */}
                     <label className="toggle">
                       <input
@@ -225,11 +224,12 @@ export default function DashboardPage() {
       {showCreate && (
         <div style={{
           position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.7)',
+          background: 'rgba(0,0,0,0.75)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000,
+          padding: '16px',
         }} onClick={() => setShowCreate(false)}>
-          <div className="card animate-fade-in" style={{ padding: '32px', width: '400px' }}
+          <div className="card animate-fade-in" style={{ padding: '28px', width: '100%', maxWidth: '420px' }}
             onClick={(e) => e.stopPropagation()}>
             <h2 style={{ fontWeight: 700, fontSize: '18px', marginBottom: '20px' }}>
               <span className="gradient-text">Create New Scenario</span>
@@ -243,12 +243,12 @@ export default function DashboardPage() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-              style={{ marginBottom: '20px' }}
+              style={{ marginBottom: '20px', fontSize: '16px' }}
               autoFocus
             />
             <div style={{ display: 'flex', gap: '12px' }}>
               <button className="btn-primary" onClick={handleCreate} style={{ flex: 1 }}>
-                Create Scenario
+                Create
               </button>
               <button className="btn-secondary" onClick={() => setShowCreate(false)} style={{ flex: 1 }}>
                 Cancel
@@ -262,11 +262,12 @@ export default function DashboardPage() {
       {deleteConfirm && (
         <div style={{
           position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.7)',
+          background: 'rgba(0,0,0,0.75)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000,
+          padding: '16px',
         }} onClick={() => setDeleteConfirm(null)}>
-          <div className="card animate-fade-in" style={{ padding: '32px', width: '380px' }}
+          <div className="card animate-fade-in" style={{ padding: '28px', width: '100%', maxWidth: '380px' }}
             onClick={(e) => e.stopPropagation()}>
             <h2 style={{ fontWeight: 700, fontSize: '18px', marginBottom: '8px', color: '#ef4444' }}>
               Delete Scenario?
@@ -276,7 +277,7 @@ export default function DashboardPage() {
             </p>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                style={{ flex: 1, padding: '10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer', fontWeight: 600 }}
+                style={{ flex: 1, padding: '12px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer', fontWeight: 600, fontSize: '15px' }}
                 onClick={() => { 
                   deleteScenario(deleteConfirm!); 
                   setDeleteConfirm(null); 

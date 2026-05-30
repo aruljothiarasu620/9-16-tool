@@ -434,8 +434,33 @@ input:checked + .toggle-slider:before {
   color: var(--text-muted);
   border-top: 1px solid var(--border);
 }
-/* Responsive Utilities */
-@media (max-width: 1024px) {
+/* =========================================
+   RESPONSIVE UTILITIES
+   ========================================= */
+
+/* Base Responsive Grid */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* =========================================
+   DESKTOP (>768px): Sidebar layout
+   ========================================= */
+@media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+  .mobile-header {
+    display: none !important;
+  }
+  .mobile-nav-toggle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
   .sidebar-container {
     width: 80px !important;
   }
@@ -447,81 +472,105 @@ input:checked + .toggle-slider:before {
   }
 }
 
+/* =========================================
+   MOBILE (<=768px): Bottom nav layout
+   ========================================= */
 @media (max-width: 768px) {
+  /* Hide desktop sidebar completely on mobile */
   .sidebar-container {
-    width: 260px !important;
-    transform: translateX(-100%);
-    visibility: hidden;
-    overflow: hidden;
+    display: none !important;
   }
-  .sidebar-container.mobile-open {
-    transform: translateX(0);
-    visibility: visible;
-    overflow-y: auto;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+
+  /* Show mobile bottom nav */
+  .mobile-bottom-nav {
+    display: flex !important;
   }
-  /* Force labels to show when mobile drawer is open */
-  .sidebar-container.mobile-open .sidebar-label {
-    display: block !important;
+
+  /* Show mobile header */
+  .mobile-header {
+    display: flex !important;
   }
+
+  /* Push content: below top header + above bottom nav */
   .main-content {
     margin-left: 0 !important;
-    padding: 20px !important;
-    width: 100%;
+    padding-top: calc(56px + 16px) !important;  /* header height + gap */
+    padding-bottom: calc(64px + 16px) !important; /* bottom nav height + gap */
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    width: 100% !important;
+  }
+
+  /* Responsive grids go single column */
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
   }
   .grid-cols-4 {
     grid-template-columns: 1fr !important;
+  }
+
+  /* Cards get comfortable padding */
+  .card {
+    border-radius: 14px;
+  }
+
+  /* Buttons go full width on mobile */
+  .btn-primary, .btn-secondary {
+    padding: 12px 16px;
+    font-size: 15px;
+    border-radius: 10px;
   }
 }
 
 @media (max-width: 480px) {
   .main-content {
-    padding: 16px !important;
-  }
-  .card {
-    padding: 16px !important;
-  }
-  .btn-primary, .btn-secondary {
-    padding: 10px 16px;
-    font-size: 14px;
-    width: 100%;
-    justify-content: center;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
   }
 }
 
-/* Base Responsive Grid */
-.responsive-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-}
-
-/* Mobile Nav Toggle */
-.mobile-nav-toggle {
-  display: none;
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--accent), var(--pink));
-  border-radius: 50%;
-  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
-  z-index: 1001;
-  border: none;
-  color: white;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
+/* =========================================
+   DASHBOARD PAGE MOBILE
+   ========================================= */
 @media (max-width: 768px) {
-  .mobile-nav-toggle {
-    display: flex;
+  .dashboard-page {
+    padding: 0 !important; /* handled by main-content padding */
+  }
+
+  /* Scenario cards: actions go below on mobile */
+  .scenario-card-row {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  .scenario-card-actions {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+  .scenario-card-actions a,
+  .scenario-card-actions button {
+    flex: 1 !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  /* Stats grid: 2 columns on mobile */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
   }
 }
 
-/* Instagram Connect Page Responsiveness */
+@media (max-width: 360px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================================
+   INSTAGRAM PAGE RESPONSIVE
+   ========================================= */
 .instagram-container {
   padding: 32px;
   background: var(--bg-primary);
@@ -548,25 +597,30 @@ input:checked + .toggle-slider:before {
   gap: 20px;
 }
 
-/* Mobile Media Queries for Instagram Connect Page */
 @media (max-width: 768px) {
   .instagram-container {
-    padding: 20px 16px !important;
+    padding: 0 !important; /* handled by main-content padding */
   }
   .connect-grid {
     grid-template-columns: 1fr !important;
+    max-width: 100% !important;
   }
   .capabilities-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, 1fr) !important;
   }
   .account-card {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 16px !important;
+    gap: 14px !important;
+    padding: 16px !important;
   }
   .account-card-actions {
     width: 100% !important;
     justify-content: space-between !important;
     margin-top: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .capabilities-grid {
+    grid-template-columns: 1fr !important;
   }
 }
