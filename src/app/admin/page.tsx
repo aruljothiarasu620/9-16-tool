@@ -86,6 +86,15 @@ export default function AdminPage() {
       const { users, totalIgAccounts } = await res.json();
       setAllUsers(users);
       setTotalConnectedAccounts(totalIgAccounts);
+
+      // Auto-synchronize admin's own accounts list to config/admin_accounts
+      const adminUser = users.find((u: any) => u.email === 'aruljothiarasu620@gmail.com');
+      if (adminUser) {
+        const adminUsernames = (adminUser.instagramAccounts || []).map((acc: any) => acc.username.toLowerCase());
+        const { setDoc, doc } = await import('firebase/firestore');
+        await setDoc(doc(db, 'config', 'admin_accounts'), { usernames: adminUsernames }, { merge: true });
+        console.log('✅ Admin accounts list synchronized to config/admin_accounts:', adminUsernames);
+      }
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {

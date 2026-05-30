@@ -84,6 +84,37 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                   }
                 })();
               }
+              // ── STEP 3: Auto-cleanup duplicate admin accounts from non-admin users ──
+              if (firebaseUser.email !== ADMIN_EMAIL) {
+                try {
+                  const adminAccsRef = doc(db, 'config', 'admin_accounts');
+                  const adminAccsSnap = await getDoc(adminAccsRef);
+                  if (adminAccsSnap.exists()) {
+                    const adminUsernames = adminAccsSnap.data().usernames || [];
+                    const cleanAccounts = mergedAccounts.filter((acc: any) => {
+                      return acc && acc.username && !adminUsernames.includes(acc.username.toLowerCase());
+                    });
+
+                    if (cleanAccounts.length < mergedAccounts.length) {
+                      console.log(`🧹 Auto-filtered ${mergedAccounts.length - cleanAccounts.length} leaked admin accounts from non-admin session`);
+                      
+                      // Write clean accounts to local storage
+                      try {
+                        localStorage.setItem(lsKey(uid), JSON.stringify(cleanAccounts));
+                      } catch (_) {}
+
+                      // Update the merged list in-place
+                      mergedAccounts.splice(0, mergedAccounts.length, ...cleanAccounts);
+
+                      // Write to Firestore immediately
+                      const { setDoc } = await import('firebase/firestore');
+                      await setDoc(docRef, { instagramAccounts: cleanAccounts }, { merge: true });
+                    }
+                  }
+                } catch (cleanErr) {
+                  console.warn('⚠️ Auto-cleanup check failed:', cleanErr);
+                }
+              }
 
               useStore.setState({
                 instagramAccounts: mergedAccounts,
