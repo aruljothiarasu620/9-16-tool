@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 
 const ADMIN_EMAIL = 'aruljothiarasu620@gmail.com';
 
@@ -44,6 +44,30 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ users, totalIgAccounts });
   } catch (err: any) {
     console.error('Admin users API error:', err);
+    return NextResponse.json({ error: 'Internal Server Error', detail: err.message }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const adminEmail = req.headers.get('x-admin-email') || '';
+
+    if (adminEmail !== ADMIN_EMAIL) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { userId } = await req.json();
+    if (!userId) {
+      return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    }
+
+    // Reset the user's instagramAccounts in Firestore to clean up any past leaks
+    const userDocRef = doc(db, 'users', userId);
+    await setDoc(userDocRef, { instagramAccounts: [] }, { merge: true });
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error('Admin reset user accounts error:', err);
     return NextResponse.json({ error: 'Internal Server Error', detail: err.message }, { status: 500 });
   }
 }

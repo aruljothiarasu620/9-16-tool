@@ -93,6 +93,35 @@ export default function AdminPage() {
     }
   };
 
+  const handleResetUserAccounts = async (userId: string) => {
+    if (!confirm('Are you sure you want to completely disconnect all Instagram accounts for this user? This will clean up any historical cross-contamination.')) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-email': user?.email || '',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (res.ok) {
+        alert('User accounts reset successfully! Please ask the user to refresh their page.');
+        if (user) {
+          fetchAllUsers(user);
+        }
+      } else {
+        const data = await res.json();
+        alert(`Failed to reset user accounts: ${data.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Error resetting user accounts:', err);
+      alert('Network error while resetting user accounts.');
+    }
+  };
+
   return (
     <div style={{ padding: '32px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
       {/* Header */}
@@ -195,12 +224,13 @@ export default function AdminPage() {
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Connected IG Accounts</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Recent Activity</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Status</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {allUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                       No users found in database yet.
                     </td>
                   </tr>
@@ -249,6 +279,28 @@ export default function AdminPage() {
                         </td>
                         <td style={{ padding: '16px' }}>
                           <span className="badge badge-active"><span className="status-dot active"></span> Active</span>
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          {u.instagramAccounts?.length > 0 ? (
+                            <button
+                              onClick={() => handleResetUserAccounts(u.id)}
+                              className="btn-danger"
+                              style={{
+                                padding: '6px 12px',
+                                fontSize: '11px',
+                                background: '#ef4444',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                              }}
+                            >
+                              Reset Accounts
+                            </button>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Clean</span>
+                          )}
                         </td>
                       </tr>
                     );

@@ -777,13 +777,21 @@ input:checked + .toggle-slider:before {
     grid-template-columns: repeat(2, 1fr) !important;
   }
   .account-card {
-    gap: 14px !important;
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    gap: 16px !important;
     padding: 16px !important;
   }
   .account-card-actions {
+    grid-column: span 2 !important;
     width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
     justify-content: space-between !important;
-    margin-top: 8px;
+    align-items: center !important;
+    margin-top: 12px !important;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
   }
 }
 
