@@ -89,27 +89,32 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 try {
                   const adminAccsRef = doc(db, 'config', 'admin_accounts');
                   const adminAccsSnap = await getDoc(adminAccsRef);
+                  let adminUsernames = ['aruljothiarasu', 'gs.srcc._1942', 'mr_mak_30_', 'ms_creates_03'];
                   if (adminAccsSnap.exists()) {
-                    const adminUsernames = adminAccsSnap.data().usernames || [];
-                    const cleanAccounts = mergedAccounts.filter((acc: any) => {
-                      return acc && acc.username && !adminUsernames.includes(acc.username.toLowerCase());
-                    });
+                    adminUsernames = adminAccsSnap.data().usernames || adminUsernames;
+                  }
+                  
+                  // Convert all to lowercase for case-insensitive match
+                  const adminLowerList = adminUsernames.map(name => name.toLowerCase());
 
-                    if (cleanAccounts.length < mergedAccounts.length) {
-                      console.log(`🧹 Auto-filtered ${mergedAccounts.length - cleanAccounts.length} leaked admin accounts from non-admin session`);
-                      
-                      // Write clean accounts to local storage
-                      try {
-                        localStorage.setItem(lsKey(uid), JSON.stringify(cleanAccounts));
-                      } catch (_) {}
+                  const cleanAccounts = mergedAccounts.filter((acc: any) => {
+                    return acc && acc.username && !adminLowerList.includes(acc.username.toLowerCase());
+                  });
 
-                      // Update the merged list in-place
-                      mergedAccounts.splice(0, mergedAccounts.length, ...cleanAccounts);
+                  if (cleanAccounts.length < mergedAccounts.length) {
+                    console.log(`🧹 Auto-filtered ${mergedAccounts.length - cleanAccounts.length} leaked admin accounts from non-admin session`);
+                    
+                    // Write clean accounts to local storage
+                    try {
+                      localStorage.setItem(lsKey(uid), JSON.stringify(cleanAccounts));
+                    } catch (_) {}
 
-                      // Write to Firestore immediately
-                      const { setDoc } = await import('firebase/firestore');
-                      await setDoc(docRef, { instagramAccounts: cleanAccounts }, { merge: true });
-                    }
+                    // Update the merged list in-place
+                    mergedAccounts.splice(0, mergedAccounts.length, ...cleanAccounts);
+
+                    // Write to Firestore immediately
+                    const { setDoc } = await import('firebase/firestore');
+                    await setDoc(docRef, { instagramAccounts: cleanAccounts }, { merge: true });
                   }
                 } catch (cleanErr) {
                   console.warn('⚠️ Auto-cleanup check failed:', cleanErr);
