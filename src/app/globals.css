@@ -774,6 +774,13 @@ input:checked + .toggle-slider:before {
   gap: 20px;
 }
 
+.account-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
 @media (max-width: 768px) {
   .instagram-container {
     padding: 0 !important; /* handled by main-content padding */

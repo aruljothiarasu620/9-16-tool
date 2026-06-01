@@ -321,7 +321,7 @@ export default function InstagramPage() {
                   </div>
                 </div>
 
-                <div className="account-card-actions" style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <div className="account-card-actions" style={{ gap: '8px', flexShrink: 0 }}>
                   <div style={{
                     display: 'flex', flexDirection: 'column', gap: '6px',
                     fontSize: '12px', textAlign: 'center',

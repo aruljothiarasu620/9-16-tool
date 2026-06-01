@@ -89,7 +89,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 try {
                   const adminAccsRef = doc(db, 'config', 'admin_accounts');
                   const adminAccsSnap = await getDoc(adminAccsRef);
-                  let adminUsernames = ['aruljothiarasu', 'gs.srcc._1942', 'mr_mak_30_', 'ms_creates_03'];
+                  let adminUsernames = ['aruljothiarasu', 'gs.srcc._1942', 'mr_mak_30_', 'ms_creates_03', 'mamitha.crushae'];
                   if (adminAccsSnap.exists()) {
                     adminUsernames = adminAccsSnap.data().usernames || adminUsernames;
                   }
