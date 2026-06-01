@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useStore } from '@/lib/store';
-import { useIsMobile } from '@/lib/useIsMobile';
 
 const navItems = [
   {
@@ -51,25 +50,9 @@ const navItems = [
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const store = useStore();
-  const isMobile = useIsMobile();
-
-  // Only render on mobile
-  if (!isMobile) return null;
 
   return (
-    <nav style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: '64px',
-      background: 'var(--bg-card)',
-      borderTop: '1px solid var(--border)',
-      zIndex: 500,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-around',
-    }}>
+    <nav className="mobile-bottom-nav">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         return (

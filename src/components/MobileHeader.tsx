@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { auth, logoutUser } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { useIsMobile } from '@/lib/useIsMobile';
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -18,7 +17,6 @@ export default function MobileHeader() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [showMenu, setShowMenu] = useState(false);
-  const isMobile = useIsMobile();
   const title = PAGE_TITLES[pathname] || 'InstaFlow';
 
   useEffect(() => {
@@ -26,26 +24,10 @@ export default function MobileHeader() {
     return () => unsub();
   }, []);
 
-  // Only render on mobile
-  if (!isMobile) return null;
-
   return (
     <>
       {/* Fixed top header */}
-      <header style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '56px',
-        background: 'var(--bg-card)',
-        borderBottom: '1px solid var(--border)',
-        zIndex: 400,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 16px',
-      }}>
+      <header className="mobile-header">
         {/* Logo + Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img

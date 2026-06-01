@@ -632,6 +632,15 @@ input:checked + .toggle-slider:before {
   font-family: inherit;
 }
 
+.main-content {
+  flex: 1;
+  min-height: 100vh;
+  margin-left: 220px;
+  transition: margin-left 0.3s ease;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
 /* =========================================
    DESKTOP (>768px): Sidebar layout
    ========================================= */
@@ -799,4 +808,8 @@ input:checked + .toggle-slider:before {
   .capabilities-grid {
     grid-template-columns: 1fr !important;
   }
+}
+
+.mobile-nav-toggle {
+  display: none !important;
 }
