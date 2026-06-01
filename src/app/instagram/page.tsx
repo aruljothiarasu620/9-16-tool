@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/lib/useIsMobile';
 import { useStore } from '@/lib/store';
 import { generateId } from '@/lib/utils';
 import { auth, db } from '@/lib/firebase';
@@ -9,6 +10,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 
 export default function InstagramPage() {
+  const isMobile = useIsMobile();
   const { instagramAccounts, addInstagramAccount, removeInstagramAccount, settings } = useStore();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState('');
@@ -284,78 +286,124 @@ export default function InstagramPage() {
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {instagramAccounts.map((account) => (
-              <div key={account.id} className="card account-card">
-                {/* Avatar */}
-                <div style={{
-                  width: '56px', height: '56px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #7c3aed, #db2777)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '24px',
-                  flexShrink: 0,
-                  overflow: 'hidden',
-                  border: '2px solid var(--accent)',
-                }}>
-                  {account.profilePicture ? (
-                    <img src={account.profilePicture} alt={account.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <span>📸</span>
+              <div key={account.id} className="card" style={{
+                padding: isMobile ? '14px' : '20px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'flex-start' : 'center',
+                gap: isMobile ? '12px' : '20px',
+              }}>
+                {/* Top row: avatar + name on mobile */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', width: '100%' }}>
+                  {/* Avatar */}
+                  <div style={{
+                    width: '52px', height: '52px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #7c3aed, #db2777)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '22px',
+                    flexShrink: 0,
+                    overflow: 'hidden',
+                    border: '2px solid var(--accent)',
+                  }}>
+                    {account.profilePicture ? (
+                      <img src={account.profilePicture} alt={account.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span>📸</span>
+                    )}
+                  </div>
+
+                  {/* Account info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '15px' }}>@{account.username}</span>
+                      <span className="badge badge-active">
+                        <span className="status-dot active" /> Connected
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                      <span>👥 {account.followerCount.toLocaleString()} followers</span>
+                      <span>📅 {new Date(account.connectedAt).toLocaleDateString()}</span>
+                    </div>
+                    {!isMobile && (
+                      <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Token: <code style={{ background: 'var(--bg-primary)', padding: '2px 6px', borderRadius: '4px' }}>
+                          {account.accessToken.slice(0, 20)}...
+                        </code>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Disconnect button — on desktop show here */}
+                  {!isMobile && (
+                    <button
+                      onClick={() => handleDisconnect(account.id)}
+                      style={{
+                        background: 'rgba(239,68,68,0.1)',
+                        border: '1px solid rgba(239,68,68,0.3)',
+                        borderRadius: '8px',
+                        padding: '8px 14px',
+                        color: '#ef4444',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        flexShrink: 0,
+                      }}>
+                      🔌 Disconnect
+                    </button>
                   )}
                 </div>
 
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '16px' }}>@{account.username}</span>
-                    <span className="badge badge-active">
-                      <span className="status-dot active" /> Connected
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '20px', fontSize: '13px', color: 'var(--text-muted)' }}>
-                    <span>👥 {account.followerCount.toLocaleString()} followers</span>
-                    <span>📅 Connected {new Date(account.connectedAt).toLocaleDateString()}</span>
-                  </div>
-                  <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)' }}>
-                    Token: <code style={{ background: 'var(--bg-primary)', padding: '2px 6px', borderRadius: '4px' }}>
-                      {account.accessToken.slice(0, 20)}...
-                    </code>
-                  </div>
-                </div>
-
-                <div className="account-card-actions" style={{ gap: '8px', flexShrink: 0 }}>
+                {/* Bottom row on mobile: permissions + disconnect */}
+                {isMobile && (
                   <div style={{
-                    display: 'flex', flexDirection: 'column', gap: '6px',
-                    fontSize: '12px', textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                    paddingTop: '10px',
+                    borderTop: '1px solid var(--border)',
+                    gap: '10px',
                   }}>
-                    {[
-                      { label: 'instagram_basic', ok: true },
-                      { label: 'content_publish', ok: true },
-                      { label: 'pages_engagement', ok: true },
-                    ].map((perm) => (
-                      <div key={perm.label} style={{
-                        padding: '3px 8px', borderRadius: '4px',
-                        background: perm.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                        border: `1px solid ${perm.ok ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                        color: perm.ok ? '#10b981' : '#ef4444',
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {[
+                        { label: 'instagram_basic', ok: true },
+                        { label: 'content_publish', ok: true },
+                        { label: 'pages_engagement', ok: true },
+                      ].map((perm) => (
+                        <div key={perm.label} style={{
+                          padding: '2px 6px', borderRadius: '4px',
+                          fontSize: '10px',
+                          background: 'rgba(16,185,129,0.1)',
+                          border: '1px solid rgba(16,185,129,0.3)',
+                          color: '#10b981',
+                        }}>
+                          ✓ {perm.label}
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => handleDisconnect(account.id)}
+                      style={{
+                        background: 'rgba(239,68,68,0.1)',
+                        border: '1px solid rgba(239,68,68,0.3)',
+                        borderRadius: '8px',
+                        padding: '7px 12px',
+                        color: '#ef4444',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        flexShrink: 0,
+                        whiteSpace: 'nowrap',
                       }}>
-                        {perm.ok ? '✓' : '✗'} {perm.label}
-                      </div>
-                    ))}
+                      🔌 Disconnect
+                    </button>
                   </div>
-                  <button
-                  onClick={() => handleDisconnect(account.id)}
-                    style={{
-                      background: 'rgba(239,68,68,0.1)',
-                      border: '1px solid rgba(239,68,68,0.3)',
-                      borderRadius: '8px',
-                      padding: '8px 12px',
-                      color: '#ef4444',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      alignSelf: 'center',
-                    }}>
-                    🔌 Disconnect
-                  </button>
-                </div>
+                )}
+
+                {/* Desktop permissions */}
+                {!isMobile && (
+                  <div style={{ display: 'none' }} />
+                )}
               </div>
             ))}
           </div>
