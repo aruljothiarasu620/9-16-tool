@@ -18,6 +18,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 export default function MobileHeader() {
   const pathname = usePathname();
+  if (pathname?.startsWith('/builder')) return null;
   const [user, setUser] = useState<User | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);

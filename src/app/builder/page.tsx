@@ -22,6 +22,7 @@ import FlowNode from '@/components/FlowNode';
 import ModuleConfigPanel from '@/components/ModuleConfigPanel';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { useIsMobile } from '@/lib/useIsMobile';
 
 const nodeTypes = { customNode: FlowNode };
 
@@ -40,6 +41,8 @@ const categories = ['Triggers', 'Actions', 'Logic'];
 
 function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
   const router = useRouter();
+  const isMobile = useIsMobile();
+  const [showModuleDrawer, setShowModuleDrawer] = useState(false);
   const { scenarios, updateScenario, addModule, updateModule, removeModule, addConnection, removeConnection, addRunLog, instagramAccounts } = useStore();
   const scenario = scenarios.find((s) => s.id === scenarioId);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -442,111 +445,137 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-primary)' }}>
       {/* Top bar */}
       <div style={{
-        height: '60px',
+        height: isMobile ? '105px' : '60px',
         borderBottom: '1px solid var(--border)',
         background: 'var(--bg-card)',
         display: 'flex',
-        alignItems: 'center',
-        padding: '0 20px',
-        gap: '16px',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'stretch' : 'center',
+        padding: isMobile ? '10px 16px' : '0 20px',
+        gap: isMobile ? '8px' : '16px',
         zIndex: 10,
       }}>
-        <button onClick={() => router.push('/')}
-          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '20px' }}>
-          ←
-        </button>
-        <input
-          value={scenarioName}
-          onChange={(e) => setScenarioName(e.target.value)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-primary)',
-            fontSize: '16px',
-            fontWeight: 700,
-            outline: 'none',
-            flex: 1,
-          }}
-        />
-        <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+        {/* Row 1 (Back arrow + Title) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+          <button onClick={() => router.push('/')}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '20px', padding: 0 }}>
+            ←
+          </button>
+          <input
+            value={scenarioName}
+            onChange={(e) => setScenarioName(e.target.value)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-primary)',
+              fontSize: '15px',
+              fontWeight: 700,
+              outline: 'none',
+              flex: 1,
+              width: '100%',
+            }}
+          />
+        </div>
+        {/* Row 2 (Buttons) */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '6px', 
+          width: isMobile ? '100%' : 'auto', 
+          justifyContent: isMobile ? 'space-between' : 'flex-end',
+          alignItems: 'center'
+        }}>
           <button onClick={() => setShowLogs(!showLogs)}
             className="btn-secondary"
-            style={{ fontSize: '12px', padding: '7px 14px' }}>
+            style={{ 
+              fontSize: '11px', 
+              padding: isMobile ? '6px 10px' : '7px 14px',
+              flex: isMobile ? 1 : 'none',
+              textAlign: 'center'
+            }}>
             📋 Logs {logs.length > 0 && `(${logs.length})`}
           </button>
           <button onClick={handleRun} disabled={isRunning}
             style={{
               background: isRunning ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg, #7c3aed, #db2777)',
-              color: 'white', border: 'none', borderRadius: '8px', padding: '8px 18px',
+              color: 'white', border: 'none', borderRadius: '8px', 
+              padding: isMobile ? '6px 12px' : '8px 18px',
               cursor: isRunning ? 'not-allowed' : 'pointer',
-              fontWeight: 600, fontSize: '13px',
-              display: 'flex', alignItems: 'center', gap: '6px',
+              fontWeight: 600, fontSize: '11px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+              flex: isMobile ? 1 : 'none',
             }}>
             {isRunning ? (
               <><span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⟳</span> Running...</>
             ) : '▶ Run'}
           </button>
-          <button onClick={handleSave} className="btn-secondary" style={{ fontSize: '13px', padding: '8px 16px' }}>
+          <button onClick={handleSave} className="btn-secondary" 
+            style={{ 
+              fontSize: '11px', 
+              padding: isMobile ? '6px 12px' : '8px 16px',
+              flex: isMobile ? 1 : 'none',
+            }}>
             💾 Save
           </button>
         </div>
       </div>
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Left sidebar - module list */}
-        <div style={{
-          width: '220px',
-          background: 'var(--bg-card)',
-          borderRight: '1px solid var(--border)',
-          padding: '16px 12px',
-          overflowY: 'auto',
-        }}>
-          {categories.map((cat) => (
-            <div key={cat} style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', padding: '0 4px' }}>
-                {cat}
-              </div>
-              {SIDEBAR_MODULES.filter((m) => m.category === cat).map(({ type }) => {
-                const meta = MODULE_CONFIG[type];
-                return (
-                  <div
-                    key={type}
-                    className="module-chip"
-                    style={{ marginBottom: '6px', cursor: 'pointer' }}
-                    draggable
-                    onClick={() => handleModuleClick(type)}
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('moduleType', type);
-                      e.dataTransfer.effectAllowed = 'move';
-                    }}
-                  >
-                    <span style={{
-                      fontSize: '14px',
-                      background: meta.color + '33',
-                      padding: '4px',
-                      borderRadius: '6px',
-                    }}>{meta.icon}</span>
-                    <span style={{ fontSize: '12px' }}>{meta.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-
+        {/* Left sidebar - module list (Desktop only) */}
+        {!isMobile && (
           <div style={{
-            marginTop: '20px',
-            padding: '12px',
-            background: 'var(--bg-primary)',
-            borderRadius: '8px',
-            border: '1px solid var(--border)',
-            fontSize: '11px',
-            color: 'var(--text-muted)',
-            lineHeight: 1.6,
+            width: '220px',
+            background: 'var(--bg-card)',
+            borderRight: '1px solid var(--border)',
+            padding: '16px 12px',
+            overflowY: 'auto',
           }}>
-            <div style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--text-primary)' }}>💡 Tip</div>
-            Drag modules onto the canvas. Click a module to configure it. Connect modules by dragging from the dots.
+            {categories.map((cat) => (
+              <div key={cat} style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', padding: '0 4px' }}>
+                  {cat}
+                </div>
+                {SIDEBAR_MODULES.filter((m) => m.category === cat).map(({ type }) => {
+                  const meta = MODULE_CONFIG[type];
+                  return (
+                    <div
+                      key={type}
+                      className="module-chip"
+                      style={{ marginBottom: '6px', cursor: 'pointer' }}
+                      draggable
+                      onClick={() => handleModuleClick(type)}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('moduleType', type);
+                        e.dataTransfer.effectAllowed = 'move';
+                      }}
+                    >
+                      <span style={{
+                        fontSize: '14px',
+                        background: meta.color + '33',
+                        padding: '4px',
+                        borderRadius: '6px',
+                      }}>{meta.icon}</span>
+                      <span style={{ fontSize: '12px' }}>{meta.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+
+            <div style={{
+              marginTop: '20px',
+              padding: '12px',
+              background: 'var(--bg-primary)',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              lineHeight: 1.6,
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--text-primary)' }}>💡 Tip</div>
+              Drag modules onto the canvas. Click a module to configure it. Connect modules by dragging from the dots.
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Canvas */}
         <div ref={reactFlowWrapper} style={{ flex: 1, position: 'relative' }}>
@@ -573,6 +602,33 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
             />
           </ReactFlow>
 
+          {/* Floating button on Mobile to open module drawer */}
+          {isMobile && (
+            <button
+              onClick={() => setShowModuleDrawer(true)}
+              style={{
+                position: 'absolute',
+                bottom: '80px',
+                right: '20px',
+                zIndex: 100,
+                background: 'linear-gradient(135deg, var(--accent), var(--pink))',
+                color: 'white',
+                border: 'none',
+                borderRadius: '50px',
+                padding: '12px 20px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              ➕ Add Module
+            </button>
+          )}
+
           {/* Empty state */}
           {nodes.length === 0 && (
             <div style={{
@@ -583,7 +639,9 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
               <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
                 <div style={{ fontSize: '48px', marginBottom: '12px', opacity: 0.5 }}>🔧</div>
                 <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '6px' }}>Empty Canvas</div>
-                <div style={{ fontSize: '13px' }}>Drag modules from the left panel to get started</div>
+                <div style={{ fontSize: '13px' }}>
+                  {isMobile ? 'Tap "Add Module" to start building' : 'Drag modules from the left panel to get started'}
+                </div>
               </div>
             </div>
           )}
@@ -591,33 +649,78 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
 
         {/* Right panel: config OR logs */}
         {showLogs ? (
-          <div style={{
-            width: '320px',
-            background: 'var(--bg-card)',
-            borderLeft: '1px solid var(--border)',
-            display: 'flex',
-            flexDirection: 'column',
-          }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 700, fontSize: '14px' }}>📋 Execution Logs</span>
-              <button onClick={() => setShowLogs(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>✕</button>
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-              {logs.length === 0 ? (
-                <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Run the scenario to see logs</div>
-              ) : (
-                logs.map((log, i) => (
-                  <div key={i} className={`log-entry ${log.type}`} style={{ marginBottom: '6px' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{log.msg}</div>
-                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      {formatDate(log.ts)}
+          isMobile ? (
+            <>
+              <div
+                onClick={() => setShowLogs(false)}
+                style={{
+                  position: 'fixed', inset: 0, zIndex: 900,
+                  background: 'rgba(0,0,0,0.6)',
+                  backdropFilter: 'blur(3px)',
+                }}
+              />
+              <div style={{
+                position: 'fixed', bottom: 0, left: 0, right: 0,
+                height: '60vh',
+                background: 'var(--bg-card)',
+                borderTop: '1px solid var(--border)',
+                borderRadius: '20px 20px 0 0',
+                zIndex: 901,
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
+                animation: 'fadeIn 0.2s ease',
+              }}>
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 700, fontSize: '14px' }}>📋 Execution Logs</span>
+                  <button onClick={() => setShowLogs(false)}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+                  {logs.length === 0 ? (
+                    <div style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '40px' }}>Run the scenario to see logs</div>
+                  ) : (
+                    logs.map((log, i) => (
+                      <div key={i} className={`log-entry ${log.type}`} style={{ marginBottom: '6px' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{log.msg}</div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          {formatDate(log.ts)}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div style={{
+              width: '320px',
+              background: 'var(--bg-card)',
+              borderLeft: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, fontSize: '14px' }}>📋 Execution Logs</span>
+                <button onClick={() => setShowLogs(false)}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>✕</button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+                {logs.length === 0 ? (
+                  <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Run the scenario to see logs</div>
+                ) : (
+                  logs.map((log, i) => (
+                    <div key={i} className={`log-entry ${log.type}`} style={{ marginBottom: '6px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{log.msg}</div>
+                      <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        {formatDate(log.ts)}
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          )
         ) : selectedModule ? (
           <ModuleConfigPanel
             module={selectedModule}
@@ -644,25 +747,92 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
             }}
           />
         ) : (
-          <div style={{
-            width: '240px',
-            background: 'var(--bg-card)',
-            borderLeft: '1px solid var(--border)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            color: 'var(--text-muted)',
-            fontSize: '13px',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.4 }}>⚙️</div>
-            <div style={{ fontWeight: 600, marginBottom: '6px', color: 'var(--text-primary)' }}>No module selected</div>
-            Click on a module in the canvas to configure it
-          </div>
+          !isMobile && (
+            <div style={{
+              width: '240px',
+              background: 'var(--bg-card)',
+              borderLeft: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px',
+              color: 'var(--text-muted)',
+              fontSize: '13px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '36px', marginBottom: '12px', opacity: 0.4 }}>⚙️</div>
+              <div style={{ fontWeight: 600, marginBottom: '6px', color: 'var(--text-primary)' }}>No module selected</div>
+              Click on a module in the canvas to configure it
+            </div>
+          )
         )}
       </div>
+
+      {/* Mobile Module Drawer overlay */}
+      {isMobile && showModuleDrawer && (
+        <>
+          <div
+            onClick={() => setShowModuleDrawer(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000,
+              background: 'rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(3px)',
+            }}
+          />
+          <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0,
+            maxHeight: '75vh',
+            background: '#13101f',
+            borderTop: '1px solid var(--border)',
+            borderRadius: '20px 20px 0 0',
+            zIndex: 1001,
+            display: 'flex', flexDirection: 'column',
+            boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
+            animation: 'fadeIn 0.2s ease',
+          }}>
+            {/* Header */}
+            <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>📦 Select Module to Add</span>
+              <button onClick={() => setShowModuleDrawer(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '18px' }}>✕</button>
+            </div>
+            {/* Content */}
+            <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {categories.map((cat) => (
+                <div key={cat}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                    {cat}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    {SIDEBAR_MODULES.filter((m) => m.category === cat).map(({ type }) => {
+                      const meta = MODULE_CONFIG[type];
+                      return (
+                        <div
+                          key={type}
+                          className="module-chip"
+                          style={{ margin: 0, cursor: 'pointer' }}
+                          onClick={() => {
+                            handleModuleClick(type);
+                            setShowModuleDrawer(false);
+                          }}
+                        >
+                          <span style={{
+                            fontSize: '14px',
+                            background: meta.color + '33',
+                            padding: '4px',
+                            borderRadius: '6px',
+                          }}>{meta.icon}</span>
+                          <span style={{ fontSize: '12px' }}>{meta.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

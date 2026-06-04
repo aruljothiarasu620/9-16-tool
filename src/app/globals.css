@@ -641,6 +641,16 @@ input:checked + .toggle-slider:before {
   box-sizing: border-box;
 }
 
+.main-content-builder {
+  flex: 1;
+  height: 100vh;
+  margin-left: 220px;
+  transition: margin-left 0.3s ease;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 /* =========================================
    DESKTOP (>768px): Sidebar layout
    ========================================= */
@@ -683,6 +693,18 @@ input:checked + .toggle-slider:before {
     padding-right: 16px !important;
     width: 100% !important;
     box-sizing: border-box !important;
+  }
+
+  .main-content-builder {
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    height: 100vh !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
 
   /* Grids → single column */

@@ -3,6 +3,7 @@
 import { useStore, Module } from '@/lib/store';
 import { MODULE_CONFIG } from '@/lib/utils';
 import { useState } from 'react';
+import { useIsMobile } from '@/lib/useIsMobile';
 
 interface Props {
   module: Module;
@@ -14,6 +15,7 @@ interface Props {
 export default function ModuleConfigPanel({ module, onUpdate, onClose, onDelete }: Props) {
   const meta = MODULE_CONFIG[module.type];
   const [config, setConfig] = useState<Record<string, unknown>>(module.config || {});
+  const isMobile = useIsMobile();
 
   const set = (key: string, value: unknown) => {
     const next = { ...config, [key]: value };
@@ -21,15 +23,23 @@ export default function ModuleConfigPanel({ module, onUpdate, onClose, onDelete 
     onUpdate(next);
   };
 
-  return (
+  const panelContent = (
     <div style={{
-      width: '320px',
+      width: isMobile ? '100%' : '320px',
       background: 'var(--bg-card)',
-      borderLeft: '1px solid var(--border)',
-      height: '100%',
+      borderLeft: isMobile ? 'none' : '1px solid var(--border)',
+      height: isMobile ? '70vh' : '100%',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
+      position: isMobile ? 'fixed' : 'relative',
+      bottom: isMobile ? 0 : 'auto',
+      left: isMobile ? 0 : 'auto',
+      right: isMobile ? 0 : 'auto',
+      borderRadius: isMobile ? '20px 20px 0 0' : 0,
+      zIndex: isMobile ? 1050 : 'auto',
+      boxShadow: isMobile ? '0 -8px 32px rgba(0,0,0,0.5)' : 'none',
+      animation: isMobile ? 'fadeIn 0.2s ease' : 'none',
     }}>
       {/* Header */}
       <div style={{
@@ -106,6 +116,24 @@ export default function ModuleConfigPanel({ module, onUpdate, onClose, onDelete 
       </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <>
+        <div
+          onClick={onClose}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1049,
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(3px)',
+          }}
+        />
+        {panelContent}
+      </>
+    );
+  }
+
+  return panelContent;
 }
 
 // ========= Sub-configs =========

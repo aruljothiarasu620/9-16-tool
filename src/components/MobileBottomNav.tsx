@@ -49,6 +49,7 @@ const navItems = [
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
+  if (pathname?.startsWith('/builder')) return null;
   const store = useStore();
 
   return (
