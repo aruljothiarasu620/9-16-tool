@@ -4,6 +4,9 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { auth, logoutUser } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import Link from 'next/link';
+
+const ADMIN_EMAIL = 'aruljothiarasu620@gmail.com';
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
@@ -17,7 +20,9 @@ export default function MobileHeader() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const title = PAGE_TITLES[pathname] || 'InstaFlow';
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
@@ -91,7 +96,7 @@ export default function MobileHeader() {
             borderRadius: '12px',
             padding: '12px',
             zIndex: 900,
-            minWidth: '200px',
+            minWidth: '220px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
             animation: 'fadeIn 0.15s ease',
           }}>
@@ -100,7 +105,7 @@ export default function MobileHeader() {
                 <div style={{
                   padding: '8px 4px 12px',
                   borderBottom: '1px solid var(--border)',
-                  marginBottom: '8px',
+                  marginBottom: '10px',
                 }}>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                     {user.displayName}
@@ -109,6 +114,52 @@ export default function MobileHeader() {
                     {user.email}
                   </div>
                 </div>
+
+                {/* Mobile Extra Links */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px' }}>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setShowMenu(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '10px 12px',
+                        background: 'rgba(124, 58, 237, 0.1)',
+                        border: '1px solid rgba(124, 58, 237, 0.3)',
+                        borderRadius: '8px',
+                        color: 'var(--accent-light)',
+                        textDecoration: 'none',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      <span>🛡️</span> Admin Panel
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => { setIsHelpOpen(true); setShowMenu(false); }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 12px',
+                      background: 'var(--bg-primary)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      color: 'var(--text-primary)',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      textAlign: 'left',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <span>ℹ️</span> Help & Guide
+                  </button>
+                </div>
+
                 <button
                   onClick={() => { logoutUser(); setShowMenu(false); }}
                   style={{
@@ -128,6 +179,44 @@ export default function MobileHeader() {
                 </button>
               </>
             )}
+          </div>
+        </>
+      )}
+
+      {/* Help & Guide Mobile Drawer */}
+      {isHelpOpen && (
+        <>
+          <div
+            onClick={() => setIsHelpOpen(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 1000,
+              background: 'rgba(0,0,0,0.5)',
+            }}
+          />
+          <div style={{
+            position: 'fixed', top: 0, right: 0, bottom: 0,
+            width: '100%', maxWidth: '300px',
+            background: '#13101f', borderLeft: '1px solid var(--border)',
+            zIndex: 1001, display: 'flex', flexDirection: 'column',
+            boxShadow: '-4px 0 24px rgba(0,0,0,0.5)',
+            animation: 'slideInRight 0.3s ease',
+          }}>
+            <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Help & Guide</h2>
+              <button onClick={() => setIsHelpOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', fontSize: '16px' }}>
+                ✕
+              </button>
+            </div>
+            <div style={{ padding: '20px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="card" style={{ padding: '16px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: 'var(--accent-light)' }}>1. Connect Website</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Paste the script snippet in your header.</p>
+              </div>
+              <div className="card" style={{ padding: '16px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: '#1877F2' }}>2. Connect Facebook</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Authorize access to your IG business accounts.</p>
+              </div>
+            </div>
           </div>
         </>
       )}

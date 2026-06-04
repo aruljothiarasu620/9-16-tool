@@ -5,10 +5,12 @@ import { useStore } from '@/lib/store';
 import Link from 'next/link';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { useIsMobile } from '@/lib/useIsMobile';
 
 const ADMIN_EMAIL = 'aruljothiarasu620@gmail.com';
 
 export default function SettingsPage() {
+  const isMobile = useIsMobile();
   const { instagramAccounts, removeInstagramAccount, settings, updateSettings, runLogs } = useStore();
   const [saved, setSaved] = useState(false);
   const [localSettings, setLocalSettings] = useState(settings);
@@ -155,46 +157,85 @@ export default function SettingsPage() {
             {instagramAccounts.map((account) => (
               <div key={account.id} style={{
                 display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'flex-start' : 'center',
+                gap: isMobile ? '12px' : '14px',
                 padding: '14px',
                 background: 'var(--bg-primary)',
                 borderRadius: '8px',
                 border: '1px solid var(--border)',
+                width: '100%',
               }}>
-                <div style={{
-                  width: '40px', height: '40px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #7c3aed, #db2777)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  overflow: 'hidden', border: '2px solid var(--accent)',
-                }}>
-                  {account.profilePicture
-                    ? <img src={account.profilePicture} alt={account.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <span>📸</span>}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: '14px' }}>@{account.username}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                    {account.followerCount.toLocaleString()} followers · Connected {new Date(account.connectedAt).toLocaleDateString()}
-                  </div>
-                </div>
-                <span className="badge badge-active">
-                  <span className="status-dot active" /> Active
-                </span>
-                <button
-                  onClick={() => removeInstagramAccount(account.id)}
-                  style={{
-                    background: 'rgba(239,68,68,0.1)',
-                    border: '1px solid rgba(239,68,68,0.3)',
-                    borderRadius: '6px',
-                    padding: '6px 10px',
-                    color: '#ef4444',
-                    cursor: 'pointer',
-                    fontSize: '12px',
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', width: '100%', minWidth: 0 }}>
+                  <div style={{
+                    width: '40px', height: '40px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #7c3aed, #db2777)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden', border: '2px solid var(--accent)',
+                    flexShrink: 0
                   }}>
-                  Remove
-                </button>
+                    {account.profilePicture
+                      ? <img src={account.profilePicture} alt={account.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <span>📸</span>}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '14px' }}>@{account.username}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                      {account.followerCount.toLocaleString()} followers · Connected {new Date(account.connectedAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                  {!isMobile && (
+                    <span className="badge badge-active" style={{ flexShrink: 0 }}>
+                      <span className="status-dot active" /> Active
+                    </span>
+                  )}
+                </div>
+
+                {isMobile ? (
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                    paddingTop: '10px',
+                    borderTop: '1px solid var(--border)',
+                    marginTop: '4px',
+                  }}>
+                    <span className="badge badge-active">
+                      <span className="status-dot active" /> Active
+                    </span>
+                    <button
+                      onClick={() => removeInstagramAccount(account.id)}
+                      style={{
+                        background: 'rgba(239,68,68,0.1)',
+                        border: '1px solid rgba(239,68,68,0.3)',
+                        borderRadius: '6px',
+                        padding: '6px 14px',
+                        color: '#ef4444',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                      }}>
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => removeInstagramAccount(account.id)}
+                    style={{
+                      background: 'rgba(239,68,68,0.1)',
+                      border: '1px solid rgba(239,68,68,0.3)',
+                      borderRadius: '6px',
+                      padding: '6px 10px',
+                      color: '#ef4444',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      flexShrink: 0
+                    }}>
+                    Remove
+                  </button>
+                )}
               </div>
             ))}
           </div>
