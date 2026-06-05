@@ -210,12 +210,20 @@ export default function MobileHeader() {
             </div>
             <div style={{ padding: '20px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div className="card" style={{ padding: '16px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: 'var(--accent-light)' }}>1. Connect Website</h3>
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Paste the script snippet in your header.</p>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: 'var(--accent-light)' }}>1. Switch to Business Account</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.4' }}>Convert your Instagram account from Personal to a Professional Business or Creator account in Instagram app settings.</p>
               </div>
               <div className="card" style={{ padding: '16px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: '#1877F2' }}>2. Connect Facebook</h3>
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Authorize access to your IG business accounts.</p>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: '#1877F2' }}>2. Link Facebook Page</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.4' }}>Link your Instagram Business/Creator account to your Facebook Page.</p>
+              </div>
+              <div className="card" style={{ padding: '16px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: 'var(--success)' }}>3. Connect Facebook</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.4' }}>Connect your Facebook account to this web app. (Note: The first connection must be done on a PC/Desktop to authorize correctly).</p>
+              </div>
+              <div className="card" style={{ padding: '16px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: 'var(--pink-light)' }}>4. Ready to Post</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.4' }}>Done! You are now ready to schedule, automate, and publish posts.</p>
               </div>
             </div>
           </div>
