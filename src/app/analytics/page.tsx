@@ -22,8 +22,8 @@ export default function AnalyticsPage() {
   const [mediaItems, setMediaItems] = useState<any[]>([]);
   const [loadingMedia, setLoadingMedia] = useState(false);
   const [fetchError, setFetchError] = useState('');
-  const [totalEngagement, setTotalEngagement] = useState(189500); // Default/fallback
-  const [engagementChange, setEngagementChange] = useState('+15.2%');
+  const [totalEngagement, setTotalEngagement] = useState(0); 
+  const [engagementChange, setEngagementChange] = useState('0%');
 
   // Date calculation
   const today = new Date();
@@ -107,7 +107,7 @@ export default function AnalyticsPage() {
 
   // Calculate real followers count or fallback
   const totalFollowers = instagramAccounts.reduce((acc, curr) => acc + (curr.followerCount || 0), 0);
-  const displayFollowers = totalFollowers > 0 ? totalFollowers.toLocaleString() : '2,481';
+  const displayFollowers = totalFollowers.toLocaleString();
 
   // 2. Count media types configured in user's scenarios
   let reelsCount = 0;
@@ -132,9 +132,9 @@ export default function AnalyticsPage() {
 
   // Default counts if no scenarios/modules/media configured
   const totalConfigured = reelsCount + singlePostsCount + carouselsCount;
-  const displayReels = totalConfigured > 0 ? reelsCount : 12;
-  const displaySingle = totalConfigured > 0 ? singlePostsCount : 8;
-  const displayCarousels = totalConfigured > 0 ? carouselsCount : 4;
+  const displayReels = instagramAccounts.length > 0 ? reelsCount : 0;
+  const displaySingle = instagramAccounts.length > 0 ? singlePostsCount : 0;
+  const displayCarousels = instagramAccounts.length > 0 ? carouselsCount : 0;
   const grandTotalMedia = displayReels + displaySingle + displayCarousels;
 
   const reelsPercent = grandTotalMedia > 0 ? Math.round((displayReels / grandTotalMedia) * 100) : 0;
@@ -144,22 +144,15 @@ export default function AnalyticsPage() {
   // 3. Generate data for the Post Engagement line chart (matching screenshot aesthetic)
   const getChartData = () => {
     if (mediaItems.length === 0) {
-      return [
-        { label: 'Oct 1', value1: 4, value2: 8 },
-        { label: 'Oct 2', value1: 22, value2: 15 },
-        { label: 'Oct 3', value1: 8, value2: 24 },
-        { label: 'Oct 4', value1: 15, value2: 10 },
-        { label: 'Oct 5', value1: 19, value2: 17 },
-        { label: 'Oct 6', value1: 11, value2: 12 },
-        { label: 'Oct 7', value1: 16, value2: 9 },
-        { label: 'Oct 8', value1: 10, value2: 20 },
-        { label: 'Oct 9', value1: 14, value2: 13 },
-        { label: 'Oct 10', value1: 25, value2: 22 },
-        { label: 'Oct 11', value1: 16, value2: 15 },
-        { label: 'Oct 12', value1: 28, value2: 26 },
-        { label: 'Oct 13', value1: 18, value2: 17 },
-        { label: 'Oct 14', value1: 26, value2: 14 }
-      ];
+      const last14Days = [];
+      const tempToday = new Date();
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date(tempToday);
+        d.setDate(tempToday.getDate() - i);
+        const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        last14Days.push({ label, value1: 0, value2: 0 });
+      }
+      return last14Days;
     }
 
     const last14Days = [];
@@ -274,32 +267,7 @@ export default function AnalyticsPage() {
       }
     });
 
-    // Default mock data only if there are no Instagram accounts connected AND no runLogs
-    if (instagramAccounts.length === 0 && runLogs.length === 0) {
-      if (day === 3) {
-        events.push({ type: 'run', label: 'Reel: 1', status: 'success' });
-      }
-      if (day === 5) {
-        events.push({ type: 'schedule', label: 'Post: 2' });
-      }
-      if (day === 8) {
-        events.push({ type: 'run', label: 'Reel: 1', status: 'success' });
-        events.push({ type: 'run', label: 'Post: 1', status: 'success' });
-      }
-      if (day === 9) {
-        events.push({ type: 'schedule', label: '10:30 AM', time: 'Post: 1' });
-        events.push({ type: 'schedule', label: '02:00 PM', time: 'Reel: 1' });
-      }
-      if (day === 10) {
-        events.push({ type: 'run', label: 'Post: 1', status: 'success' });
-      }
-      if (day === 12) {
-        events.push({ type: 'run', label: 'Reel: 2', status: 'success' });
-      }
-      if (day === 16) {
-        events.push({ type: 'schedule', label: '10:30 AM', time: 'Reel: 1' });
-      }
-    }
+    // No mock events fallback
 
     return events;
   };
@@ -327,13 +295,7 @@ export default function AnalyticsPage() {
             permalink: item.permalink
           };
         })
-    : [
-        { rank: 1, postName: 'Daily Promo Post', type: 'Reel', engagement: '21.8k', reach: '25.8k', permalink: '#' },
-        { rank: 2, postName: 'Weekend Product Showcase', type: 'Single Post', engagement: '20.0k', reach: '15.3k', permalink: '#' },
-        { rank: 3, postName: 'Customer Feedback Carousel', type: 'Carousel', engagement: '18.8k', reach: '21.8k', permalink: '#' },
-        { rank: 4, postName: 'How-to Tutorials Reel', type: 'Reel', engagement: '15.0k', reach: '13.3k', permalink: '#' },
-        { rank: 5, postName: 'App Feature Rollout', type: 'Single Post', engagement: '12.5k', reach: '13.9k', permalink: '#' }
-      ];
+    : [];
 
   return (
     <div style={{ background: 'var(--bg-primary)', minHeight: '100vh', padding: '32px' }}>
@@ -353,6 +315,45 @@ export default function AnalyticsPage() {
         }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: loadingMedia ? '#3b82f6' : '#10b981', animation: loadingMedia ? 'pulse 1.5s infinite' : 'none' }} />
           <span>{loadingMedia ? 'Syncing live Instagram metrics...' : 'Live account sync connected.'}</span>
+        </div>
+      )}
+
+      {/* No Connected Accounts Banner */}
+      {instagramAccounts.length === 0 && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: 'rgba(245,158,11,0.1)',
+          border: '1px solid rgba(245,158,11,0.2)',
+          padding: '16px 20px',
+          borderRadius: '10px',
+          fontSize: '13px',
+          marginBottom: '28px',
+          color: '#f59e0b',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '20px' }}>⚠️</span>
+            <div>
+              <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '2px' }}>No Connected Instagram Accounts</strong>
+              <span style={{ color: 'var(--text-muted)' }}>Please connect an Instagram Business account under the Instagram tab to sync live analytics.</span>
+            </div>
+          </div>
+          <Link href="/instagram" style={{
+            background: 'var(--accent)',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '8px 16px',
+            color: '#fff',
+            cursor: 'pointer',
+            fontSize: '12px',
+            fontWeight: 700,
+            textDecoration: 'none'
+          }}>
+            🔌 Connect Instagram
+          </Link>
         </div>
       )}
 
@@ -656,33 +657,41 @@ export default function AnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {performanceRows.map((row) => (
-                  <tr key={row.rank} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-primary)' }}>
-                    <td style={{ padding: '12px', fontWeight: 700, color: 'var(--text-muted)' }}>{row.rank}</td>
-                    <td style={{ padding: '12px', fontWeight: 600 }}>
-                      {row.permalink && row.permalink !== '#' ? (
-                        <a href={row.permalink} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-light)', textDecoration: 'underline' }}>
-                          {row.postName}
-                        </a>
-                      ) : (
-                        row.postName
-                      )}
+                {performanceRows.length > 0 ? (
+                  performanceRows.map((row) => (
+                    <tr key={row.rank} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                      <td style={{ padding: '12px', fontWeight: 700, color: 'var(--text-muted)' }}>{row.rank}</td>
+                      <td style={{ padding: '12px', fontWeight: 600 }}>
+                        {row.permalink && row.permalink !== '#' ? (
+                          <a href={row.permalink} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-light)', textDecoration: 'underline' }}>
+                            {row.postName}
+                          </a>
+                        ) : (
+                          row.postName
+                        )}
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <span className="badge" style={{ 
+                          background: row.type === 'Reel' ? 'rgba(124, 58, 237, 0.1)' : row.type === 'Carousel' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(219, 39, 119, 0.1)',
+                          color: row.type === 'Reel' ? 'var(--accent-light)' : row.type === 'Carousel' ? '#06b6d4' : 'var(--pink-light)',
+                          border: '1px solid currentColor',
+                          fontSize: '10px',
+                          padding: '2px 8px'
+                        }}>
+                          {row.type}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', fontWeight: 600 }}>{row.engagement}</td>
+                      <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{row.reach}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                      No performance data available. Connect an account to sync metrics.
                     </td>
-                    <td style={{ padding: '12px' }}>
-                      <span className="badge" style={{ 
-                        background: row.type === 'Reel' ? 'rgba(124, 58, 237, 0.1)' : row.type === 'Carousel' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(219, 39, 119, 0.1)',
-                        color: row.type === 'Reel' ? 'var(--accent-light)' : row.type === 'Carousel' ? '#06b6d4' : 'var(--pink-light)',
-                        border: '1px solid currentColor',
-                        fontSize: '10px',
-                        padding: '2px 8px'
-                      }}>
-                        {row.type}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px', fontWeight: 600 }}>{row.engagement}</td>
-                    <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{row.reach}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
