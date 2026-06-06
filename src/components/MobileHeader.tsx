@@ -12,6 +12,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
   '/builder': 'Builder',
   '/instagram': 'Instagram',
+  '/img-to-url': 'Img to URL',
   '/settings': 'Settings',
   '/admin': 'Admin',
 };
