@@ -69,25 +69,9 @@ export default function MobileMainWrapper({ children }: { children: React.ReactN
             </a>
           </div>
 
-          {/* Info Card */}
-          <div className="card" style={{ 
-            padding: '16px', 
-            marginBottom: '24px', 
-            background: 'rgba(124, 58, 237, 0.05)', 
-            borderColor: 'rgba(124, 58, 237, 0.2)',
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'flex-start'
-          }}>
-            <Info size={20} style={{ color: 'var(--accent-light)', flexShrink: 0, marginTop: '2px' }} />
-            <div style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>
-              <strong style={{ color: 'var(--accent-light)' }}>How it works:</strong> Drag and drop your image file into the converter frame below. Once uploaded, copy the generated public URL and paste it into modules like your <strong>Instagram Post Creator</strong> or other flow attachments in the builder.
-            </div>
-          </div>
-
           {/* Iframe Container */}
           <div className="card" style={{ 
-            height: 'calc(100vh - 260px)', 
+            height: 'calc(100vh - 180px)', 
             minHeight: '600px', 
             overflow: 'hidden', 
             position: 'relative',

@@ -226,6 +226,10 @@ export default function MobileHeader() {
                 <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: 'var(--pink-light)' }}>4. Ready to Post</h3>
                 <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.4' }}>Done! You are now ready to schedule, automate, and publish posts.</p>
               </div>
+              <div className="card" style={{ padding: '16px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: 'var(--accent-light)' }}>5. Image to URL</h3>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.4' }}>Drag and drop your image file into the converter. Once uploaded, copy the generated public URL and paste it into modules like your Instagram Post Creator or other flow attachments in the builder.</p>
+              </div>
             </div>
           </div>
         </>
