@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
+import { useIsMobile } from '@/lib/useIsMobile';
 import { 
   TrendingUp, 
   Calendar as CalendarIcon, 
@@ -16,6 +17,7 @@ import {
 import Link from 'next/link';
 
 export default function AnalyticsPage() {
+  const isMobile = useIsMobile();
   const { runLogs, scenarios, instagramAccounts } = useStore();
   
   // Real-time fetched state
@@ -298,7 +300,7 @@ export default function AnalyticsPage() {
     : [];
 
   return (
-    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh', padding: '32px' }}>
+    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh', padding: isMobile ? '16px' : '32px' }}>
       {/* Sync State Banner */}
       {instagramAccounts.length > 0 && (
         <div style={{
@@ -394,9 +396,9 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Overview Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))', gap: isMobile ? '12px' : '20px', marginBottom: '28px' }}>
         {/* Followers Gained */}
-        <div className="card" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
+        <div className="card" style={{ padding: isMobile ? '16px' : '24px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
               👤 Followers Gained
@@ -414,7 +416,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Success Rate */}
-        <div className="card" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
+        <div className="card" style={{ padding: isMobile ? '16px' : '24px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
               ⚡ Automation Success Rate
@@ -432,7 +434,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Total Engagement */}
-        <div className="card" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
+        <div className="card" style={{ padding: isMobile ? '16px' : '24px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
               📊 Total Engagement
@@ -451,9 +453,9 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Main Charts Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 2.2fr))', gap: '24px', marginBottom: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 2.2fr))', gap: isMobile ? '16px' : '24px', marginBottom: '28px' }}>
         {/* Line Chart: Post Engagement */}
-        <div className="card" style={{ padding: '24px', gridColumn: 'span 2' }}>
+        <div className="card" style={{ padding: isMobile ? '16px' : '24px', gridColumn: isMobile ? 'auto' : 'span 2' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
               <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Post Engagement Overview</h2>
@@ -544,7 +546,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Donut Chart: Media Breakdown */}
-        <div className="card" style={{ padding: '24px' }}>
+        <div className="card" style={{ padding: isMobile ? '16px' : '24px' }}>
           <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
             Media Types Breakdown
           </h2>
@@ -635,9 +637,9 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Calendar & Recent Table Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
         {/* Performance Table */}
-        <div className="card" style={{ padding: '24px' }}>
+        <div className="card" style={{ padding: isMobile ? '12px' : '24px' }}>
           <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
             Recent Post Performance
           </h2>
@@ -645,23 +647,23 @@ export default function AnalyticsPage() {
             Engagement and reach analytics per upload
           </span>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+          <div style={{ overflowX: 'auto', margin: isMobile ? '0 -10px' : '0' }}>
+            <table style={{ width: '100%', minWidth: isMobile ? '460px' : '500px', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>Rank</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>Post Name</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>Type</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>Engagement</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>Reach</th>
+                  <th style={{ padding: isMobile ? '8px 6px' : '8px 12px', fontWeight: 600, width: isMobile ? '40px' : '60px' }}>Rank</th>
+                  <th style={{ padding: isMobile ? '8px 6px' : '8px 12px', fontWeight: 600, minWidth: isMobile ? '130px' : '160px' }}>Post Name</th>
+                  <th style={{ padding: isMobile ? '8px 6px' : '8px 12px', fontWeight: 600, width: isMobile ? '70px' : '90px' }}>Type</th>
+                  <th style={{ padding: isMobile ? '8px 6px' : '8px 12px', fontWeight: 600, width: isMobile ? '80px' : '100px' }}>Engagement</th>
+                  <th style={{ padding: isMobile ? '8px 6px' : '8px 12px', fontWeight: 600, width: isMobile ? '70px' : '90px' }}>Reach</th>
                 </tr>
               </thead>
               <tbody>
                 {performanceRows.length > 0 ? (
                   performanceRows.map((row) => (
                     <tr key={row.rank} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-primary)' }}>
-                      <td style={{ padding: '12px', fontWeight: 700, color: 'var(--text-muted)' }}>{row.rank}</td>
-                      <td style={{ padding: '12px', fontWeight: 600 }}>
+                      <td style={{ padding: isMobile ? '8px 6px' : '12px', fontWeight: 700, color: 'var(--text-muted)' }}>{row.rank}</td>
+                      <td style={{ padding: isMobile ? '8px 6px' : '12px', fontWeight: 600 }}>
                         {row.permalink && row.permalink !== '#' ? (
                           <a href={row.permalink} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-light)', textDecoration: 'underline' }}>
                             {row.postName}
@@ -670,7 +672,7 @@ export default function AnalyticsPage() {
                           row.postName
                         )}
                       </td>
-                      <td style={{ padding: '12px' }}>
+                      <td style={{ padding: isMobile ? '8px 6px' : '12px' }}>
                         <span className="badge" style={{ 
                           background: row.type === 'Reel' ? 'rgba(124, 58, 237, 0.1)' : row.type === 'Carousel' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(219, 39, 119, 0.1)',
                           color: row.type === 'Reel' ? 'var(--accent-light)' : row.type === 'Carousel' ? '#06b6d4' : 'var(--pink-light)',
@@ -681,8 +683,8 @@ export default function AnalyticsPage() {
                           {row.type}
                         </span>
                       </td>
-                      <td style={{ padding: '12px', fontWeight: 600 }}>{row.engagement}</td>
-                      <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{row.reach}</td>
+                      <td style={{ padding: isMobile ? '8px 6px' : '12px', fontWeight: 600 }}>{row.engagement}</td>
+                      <td style={{ padding: isMobile ? '8px 6px' : '12px', color: 'var(--text-muted)' }}>{row.reach}</td>
                     </tr>
                   ))
                 ) : (
@@ -698,8 +700,8 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Content Calendar */}
-        <div className="card" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div className="card" style={{ padding: isMobile ? '12px' : '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '8px' }}>
             <div>
               <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Scheduled Posts Calendar</h2>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{currentMonthName} content dispatch</span>
@@ -711,67 +713,69 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Calendar Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-            {/* Weekday Headers */}
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-              <div key={day} style={{ textAlign: 'center', fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', paddingBottom: '6px', textTransform: 'uppercase' }}>
-                {day}
-              </div>
-            ))}
-
-            {/* Calendar Cells */}
-            {calendarCells.map((day, index) => {
-              if (day === null) {
-                return <div key={`empty-${index}`} style={{ aspectRatio: '1', background: 'transparent' }} />;
-              }
-
-              const events = getCalendarEvents(day);
-
-              return (
-                <div 
-                  key={`day-${day}`} 
-                  style={{ 
-                    aspectRatio: '1', 
-                    background: 'var(--bg-primary)', 
-                    border: '1px solid var(--border)', 
-                    borderRadius: '8px', 
-                    padding: '4px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    minHeight: '48px',
-                    position: 'relative'
-                  }}
-                >
-                  {/* Day Number */}
-                  <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)' }}>{day}</span>
-                  
-                  {/* Event Badges */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
-                    {events.map((ev, eIdx) => (
-                      <div 
-                        key={eIdx} 
-                        style={{ 
-                          fontSize: '8px', 
-                          fontWeight: 700, 
-                          padding: '1px 3px', 
-                          borderRadius: '3px',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          background: ev.type === 'run' ? 'rgba(16,185,129,0.15)' : 'rgba(124,58,237,0.15)',
-                          color: ev.type === 'run' ? '#10b981' : 'var(--accent-light)',
-                          border: `0.5px solid ${ev.type === 'run' ? 'rgba(16,185,129,0.3)' : 'rgba(124,58,237,0.3)'}`
-                        }}
-                        title={ev.label}
-                      >
-                        {ev.label}
-                      </div>
-                    ))}
-                  </div>
+          <div style={{ width: '100%', overflowX: 'auto', margin: isMobile ? '0 -4px' : '0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: isMobile ? '3px' : '6px', minWidth: isMobile ? '310px' : 'auto' }}>
+              {/* Weekday Headers */}
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                <div key={day} style={{ textAlign: 'center', fontSize: isMobile ? '8px' : '10px', fontWeight: 700, color: 'var(--text-muted)', paddingBottom: '6px', textTransform: 'uppercase' }}>
+                  {day}
                 </div>
-              );
-            })}
+              ))}
+
+              {/* Calendar Cells */}
+              {calendarCells.map((day, index) => {
+                if (day === null) {
+                  return <div key={`empty-${index}`} style={{ aspectRatio: '1', background: 'transparent' }} />;
+                }
+
+                const events = getCalendarEvents(day);
+
+                return (
+                  <div 
+                    key={`day-${day}`} 
+                    style={{ 
+                      aspectRatio: '1', 
+                      background: 'var(--bg-primary)', 
+                      border: '1px solid var(--border)', 
+                      borderRadius: isMobile ? '4px' : '8px', 
+                      padding: isMobile ? '2px' : '4px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      minHeight: isMobile ? '36px' : '48px',
+                      position: 'relative'
+                    }}
+                  >
+                    {/* Day Number */}
+                    <span style={{ fontSize: isMobile ? '8px' : '10px', fontWeight: 700, color: 'var(--text-muted)' }}>{day}</span>
+                    
+                    {/* Event Badges */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
+                      {events.map((ev, eIdx) => (
+                        <div 
+                          key={eIdx} 
+                          style={{ 
+                            fontSize: isMobile ? '6px' : '8px', 
+                            fontWeight: 700, 
+                            padding: isMobile ? '0px 1px' : '1px 3px', 
+                            borderRadius: isMobile ? '1.5px' : '3px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            background: ev.type === 'run' ? 'rgba(16,185,129,0.15)' : 'rgba(124,58,237,0.15)',
+                            color: ev.type === 'run' ? '#10b981' : 'var(--accent-light)',
+                            border: `0.5px solid ${ev.type === 'run' ? 'rgba(16,185,129,0.3)' : 'rgba(124,58,237,0.3)'}`
+                          }}
+                          title={ev.label}
+                        >
+                          {ev.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
