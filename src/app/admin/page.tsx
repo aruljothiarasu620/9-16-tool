@@ -20,6 +20,82 @@ export default function AdminPage() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+  // URL modal settings
+  const [selectedUserUrls, setSelectedUserUrls] = useState<any | null>(null);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  const handleCopyUrl = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    setTimeout(() => setCopiedUrl(null), 2000);
+  };
+
+  const extractUrls = (userObj: any) => {
+    const urls: { source: string; url: string; type: string }[] = [];
+    
+    // 1. Extract from scenarios
+    if (Array.isArray(userObj.scenarios)) {
+      userObj.scenarios.forEach((scen: any) => {
+        if (Array.isArray(scen.modules)) {
+          scen.modules.forEach((mod: any) => {
+            if (mod.config) {
+              if (typeof mod.config.imageUrl === 'string' && mod.config.imageUrl.trim()) {
+                urls.push({
+                  source: `Scenario: ${scen.name} (${mod.label})`,
+                  url: mod.config.imageUrl.trim(),
+                  type: 'Configured Image'
+                });
+              }
+              if (Array.isArray(mod.config.images)) {
+                mod.config.images.forEach((img: any, idx: number) => {
+                  if (typeof img === 'string' && img.trim()) {
+                    urls.push({
+                      source: `Scenario: ${scen.name} (${mod.label} - Slide ${idx + 1})`,
+                      url: img.trim(),
+                      type: 'Configured Image'
+                    });
+                  }
+                });
+              }
+            }
+          });
+        }
+      });
+    }
+
+    // 2. Extract from runLogs (search for urls in details)
+    if (Array.isArray(userObj.runLogs)) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      userObj.runLogs.forEach((log: any) => {
+        if (typeof log.details === 'string') {
+          const matches = log.details.match(urlRegex);
+          if (matches) {
+            matches.forEach((urlStr: string) => {
+              urls.push({
+                source: `Log: ${new Date(log.timestamp).toLocaleString()}`,
+                url: urlStr,
+                type: 'Execution Output'
+              });
+            });
+          }
+        }
+      });
+    }
+
+    // Deduplicate
+    const uniqueUrls: typeof urls = [];
+    const seen = new Set<string>();
+    urls.forEach((item) => {
+      const key = `${item.url}-${item.source}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueUrls.push(item);
+      }
+    });
+
+    return uniqueUrls;
+  };
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
@@ -232,6 +308,7 @@ export default function AdminPage() {
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>User Profile</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Connected IG Accounts</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Recent Activity</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>User Links</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Status</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Actions</th>
                 </tr>
@@ -239,7 +316,7 @@ export default function AdminPage() {
               <tbody>
                 {allUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                       No users found in database yet.
                     </td>
                   </tr>
@@ -287,6 +364,24 @@ export default function AdminPage() {
                           )}
                         </td>
                         <td style={{ padding: '16px' }}>
+                          <button
+                            onClick={() => setSelectedUserUrls(u)}
+                            className="btn-secondary"
+                            style={{
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            🔗 View Links ({extractUrls(u).length})
+                          </button>
+                        </td>
+                        <td style={{ padding: '16px' }}>
                           <span className="badge badge-active"><span className="status-dot active"></span> Active</span>
                         </td>
                         <td style={{ padding: '16px' }}>
@@ -320,6 +415,180 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {/* User Media Links Modal */}
+      {selectedUserUrls && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000,
+          padding: '16px',
+        }} onClick={() => setSelectedUserUrls(null)}>
+          <div className="card animate-fade-in" style={{ 
+            padding: '28px', 
+            width: '100%', 
+            maxWidth: '650px',
+            maxHeight: '85vh',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h2 style={{ fontWeight: 800, fontSize: '20px', marginBottom: '4px' }} className="gradient-text">
+                  Media & Output Links
+                </h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
+                  Extracted URLs for <strong style={{ color: 'var(--text-primary)' }}>{selectedUserUrls.name || selectedUserUrls.email}</strong>
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedUserUrls(null)} 
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  color: 'var(--text-muted)', 
+                  cursor: 'pointer', 
+                  fontSize: '20px',
+                  padding: '4px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {(() => {
+                const urls = extractUrls(selectedUserUrls);
+                if (urls.length === 0) {
+                  return (
+                    <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔗</div>
+                      <p style={{ fontSize: '13px' }}>No media or output URLs found for this user.</p>
+                      <p style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>
+                        URLs will appear here once they configure image links in scenario builder modules or run scenarios.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return urls.map((item, idx) => {
+                  const isImage = /\.(jpeg|jpg|gif|png|webp|svg)/i.test(item.url) || item.url.includes('imgur.com') || item.url.includes('vercel.app') || item.url.includes('fbcdn.net');
+                  const isCopied = copiedUrl === item.url;
+                  
+                  return (
+                    <div key={idx} className="card" style={{ 
+                      padding: '16px', 
+                      background: 'var(--bg-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '14px',
+                      borderColor: 'var(--border)'
+                    }}>
+                      {/* Image Thumbnail */}
+                      <div style={{ 
+                        width: '56px', 
+                        height: '56px', 
+                        borderRadius: '8px', 
+                        background: 'var(--bg-card)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        border: '1px solid var(--border)'
+                      }}>
+                        {isImage ? (
+                          <img 
+                            src={item.url} 
+                            alt="Media Preview" 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                              const parent = (e.target as HTMLElement).parentElement;
+                              if (parent) {
+                                const fallback = document.createElement('span');
+                                fallback.innerHTML = '🔗';
+                                fallback.style.fontSize = '20px';
+                                parent.appendChild(fallback);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: '20px' }}>🔗</span>
+                        )}
+                      </div>
+
+                      {/* URL details */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                          <span className="badge" style={{ 
+                            fontSize: '9px', 
+                            padding: '2px 8px', 
+                            background: 'rgba(124, 58, 237, 0.15)', 
+                            color: 'var(--accent-light)',
+                            border: '1px solid rgba(124, 58, 237, 0.3)'
+                          }}>
+                            {item.type}
+                          </span>
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                            {item.source}
+                          </span>
+                        </div>
+                        <a 
+                          href={item.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ 
+                            fontSize: '12px', 
+                            color: 'var(--text-primary)', 
+                            textDecoration: 'none',
+                            wordBreak: 'break-all',
+                            fontWeight: 500,
+                            display: 'block'
+                          }}
+                          className="hover:underline"
+                        >
+                          {item.url}
+                        </a>
+                      </div>
+
+                      {/* Copy Action */}
+                      <button
+                        onClick={() => handleCopyUrl(item.url)}
+                        className="btn-secondary"
+                        style={{
+                          padding: '8px 12px',
+                          fontSize: '11px',
+                          whiteSpace: 'nowrap',
+                          background: isCopied ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-card)',
+                          borderColor: isCopied ? 'var(--success)' : 'var(--border)',
+                          color: isCopied ? 'var(--success)' : 'var(--text-primary)',
+                          cursor: 'pointer',
+                          borderRadius: '6px'
+                        }}
+                      >
+                        {isCopied ? 'Copied! ✓' : 'Copy'}
+                      </button>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+            
+            <button 
+              className="btn-secondary" 
+              onClick={() => setSelectedUserUrls(null)} 
+              style={{ width: '100%', padding: '12px' }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ marginTop: '40px', textAlign: 'center' }}>
         <Link href="/" style={{ color: 'var(--accent-light)', fontSize: '13px', textDecoration: 'none' }}>
