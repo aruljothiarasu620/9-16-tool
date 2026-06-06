@@ -286,7 +286,8 @@ export const useStore = create<AppStore>()(
 
     addRunLog: (log) =>
       set((state) => {
-        const nextLogs = [log, ...state.runLogs].slice(0, 50);
+        // Increased log history cap to 1000 to cover extensive run histories
+        const nextLogs = [log, ...state.runLogs].slice(0, 1000);
         saveUserDataToCloud({ runLogs: nextLogs });
         return { runLogs: nextLogs };
       }),
