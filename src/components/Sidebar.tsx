@@ -14,6 +14,7 @@ const navItems = [
   { href: '/builder', label: 'Builder', icon: '🔧' },
   { href: '/instagram', label: 'Instagram', icon: '📸' },
   { href: '/img-to-url', label: 'Img to URL', icon: '🖼️' },
+  { href: '/analytics', label: 'Analytics', icon: '📈' },
   { href: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
