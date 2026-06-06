@@ -214,10 +214,16 @@ export default function InstagramPage() {
     setShowManualForm(false);
   };
 
-  const handleDisconnect = async (id: string) => {
-    // Compute remaining BEFORE store update to avoid React batching timing issues
-    const remaining = useStore.getState().instagramAccounts.filter((a: any) => a.id !== id);
-    removeInstagramAccount(id);
+  const handleDisconnect = async (id: string, username?: string) => {
+    // Compute remaining BEFORE store update to avoid React batching timing issues, filtering by both ID and username
+    const remaining = useStore.getState().instagramAccounts.filter((a: any) => {
+      const idMatch = a.id === id;
+      const usernameMatch = username && a.username.toLowerCase() === username.toLowerCase();
+      return !idMatch && !usernameMatch;
+    });
+    
+    removeInstagramAccount(id, username);
+    
     // Write the exact remaining list to Firestore
     const user = auth.currentUser;
     if (user) {
@@ -337,7 +343,7 @@ export default function InstagramPage() {
                   {/* Disconnect button — on desktop show here */}
                   {!isMobile && (
                     <button
-                      onClick={() => handleDisconnect(account.id)}
+                      onClick={() => handleDisconnect(account.id, account.username)}
                       style={{
                         background: 'rgba(239,68,68,0.1)',
                         border: '1px solid rgba(239,68,68,0.3)',
@@ -383,7 +389,7 @@ export default function InstagramPage() {
                       ))}
                     </div>
                     <button
-                      onClick={() => handleDisconnect(account.id)}
+                      onClick={() => handleDisconnect(account.id, account.username)}
                       style={{
                         background: 'rgba(239,68,68,0.1)',
                         border: '1px solid rgba(239,68,68,0.3)',

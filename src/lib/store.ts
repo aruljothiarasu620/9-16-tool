@@ -95,7 +95,7 @@ interface AppStore {
 
   // Instagram actions
   addInstagramAccount: (account: InstagramAccount) => void;
-  removeInstagramAccount: (id: string) => void;
+  removeInstagramAccount: (id: string, username?: string) => void;
   updateInstagramAccount: (id: string, updates: Partial<InstagramAccount>) => void;
 
   // Settings
@@ -309,12 +309,17 @@ export const useStore = create<AppStore>()(
         return { instagramAccounts: nextAccounts };
       }),
 
-    removeInstagramAccount: (id) =>
+    removeInstagramAccount: (id, username) =>
       set((state) => {
-        const nextAccounts = state.instagramAccounts.filter((a) => a.id !== id);
+        const nextAccounts = state.instagramAccounts.filter((a) => {
+          const idMatch = a.id === id;
+          const usernameMatch = username && a.username.toLowerCase() === username.toLowerCase();
+          return !idMatch && !usernameMatch;
+        });
         if (typeof window !== 'undefined') {
           const key = auth.currentUser ? `ig_accounts_${auth.currentUser.uid}` : 'instagramAccounts';
           localStorage.setItem(key, JSON.stringify(nextAccounts));
+          localStorage.setItem('instagramAccounts', JSON.stringify(nextAccounts));
         }
         return { instagramAccounts: nextAccounts };
       }),
