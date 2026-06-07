@@ -40,12 +40,12 @@ export default function AdminPage() {
     // 1. Extract from scenarios
     if (Array.isArray(userObj.scenarios)) {
       userObj.scenarios.forEach((scen: any) => {
-        if (Array.isArray(scen.modules)) {
+        if (scen && Array.isArray(scen.modules)) {
           scen.modules.forEach((mod: any) => {
-            if (mod.config) {
+            if (mod && mod.config) {
               if (typeof mod.config.imageUrl === 'string' && mod.config.imageUrl.trim()) {
                 urls.push({
-                  source: `Scenario: ${scen.name} (${mod.label})`,
+                  source: `Scenario: ${scen.name || 'Unnamed'} (${mod.label || 'Unnamed'})`,
                   url: mod.config.imageUrl.trim(),
                   type: 'Configured Image'
                 });
@@ -54,7 +54,7 @@ export default function AdminPage() {
                 mod.config.images.forEach((img: any, idx: number) => {
                   if (typeof img === 'string' && img.trim()) {
                     urls.push({
-                      source: `Scenario: ${scen.name} (${mod.label} - Slide ${idx + 1})`,
+                      source: `Scenario: ${scen.name || 'Unnamed'} (${mod.label || 'Unnamed'} - Slide ${idx + 1})`,
                       url: img.trim(),
                       type: 'Configured Image'
                     });
@@ -71,12 +71,12 @@ export default function AdminPage() {
     if (Array.isArray(userObj.runLogs)) {
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       userObj.runLogs.forEach((log: any) => {
-        if (typeof log.details === 'string') {
+        if (log && typeof log.details === 'string') {
           const matches = log.details.match(urlRegex);
           if (matches) {
             matches.forEach((urlStr: string) => {
               urls.push({
-                source: `Log: ${new Date(log.timestamp).toLocaleString()}`,
+                source: `Log: ${log.timestamp ? new Date(log.timestamp).toLocaleString() : 'Unknown Date'}`,
                 url: urlStr,
                 type: 'Execution Output'
               });
@@ -90,10 +90,12 @@ export default function AdminPage() {
     const uniqueUrls: typeof urls = [];
     const seen = new Set<string>();
     urls.forEach((item) => {
-      const key = `${item.url}-${item.source}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        uniqueUrls.push(item);
+      if (item && item.url) {
+        const key = `${item.url}-${item.source}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueUrls.push(item);
+        }
       }
     });
 
@@ -344,8 +346,8 @@ export default function AdminPage() {
                         <td style={{ padding: '16px' }}>
                           {u.instagramAccounts?.length > 0 ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                              {u.instagramAccounts.map((acc: any) => (
-                                <span key={acc.id} className="badge" style={{ background: 'rgba(225, 48, 108, 0.1)', color: '#E1306C', border: '1px solid rgba(225, 48, 108, 0.2)', width: 'fit-content' }}>
+                              {u.instagramAccounts.map((acc: any) => acc && acc.username && (
+                                <span key={acc.id || acc.username} className="badge" style={{ background: 'rgba(225, 48, 108, 0.1)', color: '#E1306C', border: '1px solid rgba(225, 48, 108, 0.2)', width: 'fit-content' }}>
                                   @{acc.username}
                                 </span>
                               ))}

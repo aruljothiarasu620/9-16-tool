@@ -122,11 +122,11 @@ export default function UserAnalyticsModal({ isOpen, onClose, user }: UserAnalyt
 
   // 1. Calculate Success Rate from real run logs
   const totalRuns = runLogs.length;
-  const successRuns = runLogs.filter((l: any) => l.status === 'success').length;
+  const successRuns = runLogs.filter((l: any) => l && l.status === 'success').length;
   const successRate = totalRuns > 0 ? ((successRuns / totalRuns) * 100).toFixed(1) : '0.0';
 
   // Calculate real followers count
-  const totalFollowers = instagramAccounts.reduce((acc: number, curr: any) => acc + (curr.followerCount || 0), 0);
+  const totalFollowers = instagramAccounts.reduce((acc: number, curr: any) => acc + (curr?.followerCount || 0), 0);
   const displayFollowers = totalFollowers.toLocaleString();
 
   // 2. Count media types configured
@@ -136,17 +136,21 @@ export default function UserAnalyticsModal({ isOpen, onClose, user }: UserAnalyt
 
   if (mediaItems.length > 0) {
     mediaItems.forEach(m => {
-      if (m.media_type === 'VIDEO') reelsCount++;
-      else if (m.media_type === 'IMAGE') singlePostsCount++;
-      else if (m.media_type === 'CAROUSEL_ALBUM') carouselsCount++;
+      if (m && m.media_type === 'VIDEO') reelsCount++;
+      else if (m && m.media_type === 'IMAGE') singlePostsCount++;
+      else if (m && m.media_type === 'CAROUSEL_ALBUM') carouselsCount++;
     });
   } else {
     scenarios.forEach((scen: any) => {
-      scen.modules?.forEach((mod: any) => {
-        if (mod.type === 'reel') reelsCount++;
-        else if (mod.type === 'single_post') singlePostsCount++;
-        else if (mod.type === 'carousel_post') carouselsCount++;
-      });
+      if (scen && Array.isArray(scen.modules)) {
+        scen.modules.forEach((mod: any) => {
+          if (mod) {
+            if (mod.type === 'reel') reelsCount++;
+            else if (mod.type === 'single_post') singlePostsCount++;
+            else if (mod.type === 'carousel_post') carouselsCount++;
+          }
+        });
+      }
     });
   }
 
@@ -253,18 +257,22 @@ export default function UserAnalyticsModal({ isOpen, onClose, user }: UserAnalyt
     const events: { type: 'run' | 'schedule'; label: string; status?: string; time?: string }[] = [];
     
     mediaItems.forEach((m) => {
-      const postDate = new Date(m.timestamp);
-      if (postDate.getDate() === day && postDate.getMonth() === currentMonthIndex && postDate.getFullYear() === currentYear) {
-        const typeLabel = m.media_type === 'VIDEO' ? 'Reel' : m.media_type === 'CAROUSEL_ALBUM' ? 'Carousel' : 'Post';
-        events.push({ type: 'run', label: `${typeLabel} (Live)`, status: 'success' });
+      if (m && m.timestamp) {
+        const postDate = new Date(m.timestamp);
+        if (postDate.getDate() === day && postDate.getMonth() === currentMonthIndex && postDate.getFullYear() === currentYear) {
+          const typeLabel = m.media_type === 'VIDEO' ? 'Reel' : m.media_type === 'CAROUSEL_ALBUM' ? 'Carousel' : 'Post';
+          events.push({ type: 'run', label: `${typeLabel} (Live)`, status: 'success' });
+        }
       }
     });
 
     runLogs.forEach((log: any) => {
-      const logDate = new Date(log.timestamp);
-      if (logDate.getDate() === day && logDate.getMonth() === currentMonthIndex && logDate.getFullYear() === currentYear) {
-        if (events.length < 3) {
-          events.push({ type: 'run', label: `Flow: ${log.status === 'success' ? '✓' : '✗'}`, status: log.status });
+      if (log && log.timestamp) {
+        const logDate = new Date(log.timestamp);
+        if (logDate.getDate() === day && logDate.getMonth() === currentMonthIndex && logDate.getFullYear() === currentYear) {
+          if (events.length < 3) {
+            events.push({ type: 'run', label: `Flow: ${log.status === 'success' ? '✓' : '✗'}`, status: log.status });
+          }
         }
       }
     });

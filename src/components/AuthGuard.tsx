@@ -157,13 +157,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Admin routing
-        if (firebaseUser.email === ADMIN_EMAIL && pathname === '/') {
-          router.replace('/admin');
-        }
-        if (firebaseUser.email !== ADMIN_EMAIL && pathname === '/admin') {
-          router.replace('/');
-        }
       } else {
         // Logged out — wipe store and reset UID tracker
         firestoreLoadedForUid = null;
@@ -176,6 +169,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     return () => unsub();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Enforce admin/non-admin routing rules Reactively on path changes
+  useEffect(() => {
+    if (!loading && user) {
+      if (user.email === ADMIN_EMAIL && pathname === '/') {
+        router.replace('/admin');
+      } else if (user.email !== ADMIN_EMAIL && pathname === '/admin') {
+        router.replace('/');
+      }
+    }
+  }, [pathname, user, loading, router]);
 
   const handleGoogleLogin = async () => {
     setSigningIn(true);
