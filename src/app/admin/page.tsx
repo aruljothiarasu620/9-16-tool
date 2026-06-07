@@ -5,6 +5,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 import Link from 'next/link';
+import UserAnalyticsModal from '@/components/UserAnalyticsModal';
 
 export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -23,6 +24,9 @@ export default function AdminPage() {
   // URL modal settings
   const [selectedUserUrls, setSelectedUserUrls] = useState<any | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  // Analytics modal settings
+  const [selectedUserAnalytics, setSelectedUserAnalytics] = useState<any | null>(null);
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -309,6 +313,7 @@ export default function AdminPage() {
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Connected IG Accounts</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Recent Activity</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>User Links</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>Analytics</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Status</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Actions</th>
                 </tr>
@@ -316,7 +321,7 @@ export default function AdminPage() {
               <tbody>
                 {allUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                       No users found in database yet.
                     </td>
                   </tr>
@@ -379,6 +384,27 @@ export default function AdminPage() {
                             }}
                           >
                             🔗 View Links ({extractUrls(u).length})
+                          </button>
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          <button
+                            onClick={() => setSelectedUserAnalytics(u)}
+                            className="btn-secondary"
+                            style={{
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              whiteSpace: 'nowrap',
+                              background: 'rgba(124, 58, 237, 0.1)',
+                              color: 'var(--accent-light)',
+                              border: '1px solid rgba(124, 58, 237, 0.2)'
+                            }}
+                          >
+                            📊 View Analytics
                           </button>
                         </td>
                         <td style={{ padding: '16px' }}>
@@ -589,6 +615,13 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* User Analytics Modal */}
+      <UserAnalyticsModal
+        isOpen={!!selectedUserAnalytics}
+        onClose={() => setSelectedUserAnalytics(null)}
+        user={selectedUserAnalytics}
+      />
 
       <div style={{ marginTop: '40px', textAlign: 'center' }}>
         <Link href="/" style={{ color: 'var(--accent-light)', fontSize: '13px', textDecoration: 'none' }}>
