@@ -7,8 +7,8 @@ import MobileHeader from '@/components/MobileHeader';
 import MobileMainWrapper from '@/components/MobileMainWrapper';
 
 export const metadata: Metadata = {
-  title: 'InstaFlow - Instagram Automation Builder',
-  description: 'Powerful drag-and-drop Instagram automation inspired by Make.com. Schedule posts, carousels, reels and more.',
+  title: 'InstaFlow - Instagram Automation Builder | FullSizePost',
+  description: 'Powerful drag-and-drop Instagram automation inspired by Make.com on FullSizePost. Schedule posts, carousels, reels and more.',
 };
 
 export default function RootLayout({
