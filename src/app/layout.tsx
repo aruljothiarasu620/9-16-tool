@@ -8,7 +8,32 @@ import MobileMainWrapper from '@/components/MobileMainWrapper';
 
 export const metadata: Metadata = {
   title: 'InstaFlow - Instagram Automation Builder | FullSizePost',
-  description: 'Powerful drag-and-drop Instagram automation inspired by Make.com on FullSizePost. Schedule posts, carousels, reels and more.',
+  description: 'Powerful drag-and-drop Instagram automation inspired by Make.com on FullSizePost. Schedule and automate full size 9:16 ratio posts, reels, stories, and carousels without cropping.',
+  keywords: [
+    '9:16 ratio post',
+    '9:16 post',
+    '9:16 poat',
+    'full size post',
+    'full size post instagram',
+    'no crop post',
+    'instagram',
+    'instagram post',
+    'make.com',
+    'automation tool',
+    'instagram automation tool',
+    'instagram no crop photo',
+    'full size post scheduler',
+    '9:16 layout instagram',
+    'no crop instagram post builder',
+    'make.com instagram automation',
+    'full size image to url converter',
+    'instagram 9:16 post creator',
+    'insta automation flow',
+    'fullsizepost',
+    'fullsizepost online',
+    'instagram scheduler without cropping',
+    '9 16 aspect ratio post maker'
+  ]
 };
 
 export default function RootLayout({
