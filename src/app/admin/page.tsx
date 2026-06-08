@@ -172,7 +172,9 @@ export default function AdminPage() {
       // Auto-synchronize admin's own accounts list to config/admin_accounts
       const adminUser = users.find((u: any) => u.email === 'aruljothiarasu620@gmail.com');
       if (adminUser) {
-        const adminUsernames = (adminUser.instagramAccounts || []).map((acc: any) => acc.username.toLowerCase());
+        const adminUsernames = (adminUser.instagramAccounts || [])
+          .map((acc: any) => acc?.username?.toLowerCase())
+          .filter(Boolean);
         const { setDoc, doc } = await import('firebase/firestore');
         await setDoc(doc(db, 'config', 'admin_accounts'), { usernames: adminUsernames }, { merge: true });
         console.log('✅ Admin accounts list synchronized to config/admin_accounts:', adminUsernames);
@@ -344,7 +346,7 @@ export default function AdminPage() {
                           </div>
                         </td>
                         <td style={{ padding: '16px' }}>
-                          {u.instagramAccounts?.length > 0 ? (
+                          {Array.isArray(u.instagramAccounts) && u.instagramAccounts.length > 0 ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                               {u.instagramAccounts.map((acc: any) => acc && acc.username && (
                                 <span key={acc.id || acc.username} className="badge" style={{ background: 'rgba(225, 48, 108, 0.1)', color: '#E1306C', border: '1px solid rgba(225, 48, 108, 0.2)', width: 'fit-content' }}>

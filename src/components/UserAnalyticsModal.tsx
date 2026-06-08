@@ -38,9 +38,9 @@ export default function UserAnalyticsModal({ isOpen, onClose, user }: UserAnalyt
   const [totalEngagement, setTotalEngagement] = useState(0); 
   const [engagementChange, setEngagementChange] = useState('0%');
 
-  const runLogs = user?.runLogs || [];
-  const scenarios = user?.scenarios || [];
-  const instagramAccounts = user?.instagramAccounts || [];
+  const runLogs = Array.isArray(user?.runLogs) ? user.runLogs : [];
+  const scenarios = Array.isArray(user?.scenarios) ? user.scenarios : [];
+  const instagramAccounts = Array.isArray(user?.instagramAccounts) ? user.instagramAccounts : [];
 
   // Date calculation
   const today = new Date();
@@ -64,7 +64,7 @@ export default function UserAnalyticsModal({ isOpen, onClose, user }: UserAnalyt
         const allFetchedMedia: any[] = [];
         
         for (const account of instagramAccounts) {
-          if (!account.pageId || !account.accessToken) continue;
+          if (!account || !account.pageId || !account.accessToken) continue;
           
           const res = await fetch(`https://graph.facebook.com/v18.0/${account.pageId}/media?fields=id,caption,media_type,media_url,like_count,comments_count,timestamp,permalink&limit=50&access_token=${account.accessToken}`);
           const data = await res.json();
@@ -182,6 +182,7 @@ export default function UserAnalyticsModal({ isOpen, onClose, user }: UserAnalyt
       let reelsEng = 0;
       let postsEng = 0;
       postsOnDay.forEach(p => {
+        if (!p) return;
         const eng = (p.like_count || 0) + (p.comments_count || 0);
         if (p.media_type === 'VIDEO') reelsEng += eng;
         else postsEng += eng;
