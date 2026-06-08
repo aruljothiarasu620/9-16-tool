@@ -105,7 +105,7 @@ export default function UserAnalyticsModal({ isOpen, onClose, user }: UserAnalyt
     };
 
     fetchAllMedia();
-  }, [user, instagramAccounts]);
+  }, [user]);
 
   if (!isOpen || !user) return null;
 

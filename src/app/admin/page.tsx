@@ -175,7 +175,6 @@ export default function AdminPage() {
         const adminUsernames = (adminUser.instagramAccounts || [])
           .map((acc: any) => acc?.username?.toLowerCase())
           .filter(Boolean);
-        const { setDoc, doc } = await import('firebase/firestore');
         await setDoc(doc(db, 'config', 'admin_accounts'), { usernames: adminUsernames }, { merge: true });
         console.log('✅ Admin accounts list synchronized to config/admin_accounts:', adminUsernames);
       }
@@ -621,11 +620,13 @@ export default function AdminPage() {
       )}
 
       {/* User Analytics Modal */}
-      <UserAnalyticsModal
-        isOpen={!!selectedUserAnalytics}
-        onClose={() => setSelectedUserAnalytics(null)}
-        user={selectedUserAnalytics}
-      />
+      {selectedUserAnalytics && (
+        <UserAnalyticsModal
+          isOpen={!!selectedUserAnalytics}
+          onClose={() => setSelectedUserAnalytics(null)}
+          user={selectedUserAnalytics}
+        />
+      )}
 
       <div style={{ marginTop: '40px', textAlign: 'center' }}>
         <Link href="/" style={{ color: 'var(--accent-light)', fontSize: '13px', textDecoration: 'none' }}>
