@@ -170,12 +170,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Enforce admin/non-admin routing rules Reactively on path changes
   useEffect(() => {
     if (!loading && user) {
-      if (user.email === ADMIN_EMAIL && pathname === '/') {
-        router.replace('/admin');
-      } else if (user.email !== ADMIN_EMAIL && pathname === '/admin') {
+      if (user.email !== ADMIN_EMAIL && pathname === '/admin') {
         router.replace('/');
       }
     }
