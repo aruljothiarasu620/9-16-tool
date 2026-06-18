@@ -279,6 +279,36 @@ function WebhookConfig({ config, set }: { config: Record<string, unknown>; set: 
   );
 }
 
+function CrossPostingToggles({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
+  return (
+    <Field label="Cross-Posting Options">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--bg-primary)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+          <label className="toggle">
+            <input type="checkbox" checked={!!(config.shareToFacebook)}
+              onChange={(e) => set('shareToFacebook', e.target.checked)} />
+            <span className="toggle-slider" />
+          </label>
+          <span style={{ fontSize: '13px', color: !!(config.shareToFacebook) ? 'var(--text-primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            👥 Share to Facebook Page
+          </span>
+        </label>
+        
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+          <label className="toggle">
+            <input type="checkbox" checked={!!(config.shareToThreads)}
+              onChange={(e) => set('shareToThreads', e.target.checked)} />
+            <span className="toggle-slider" />
+          </label>
+          <span style={{ fontSize: '13px', color: !!(config.shareToThreads) ? 'var(--text-primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            🧵 Share to Threads
+          </span>
+        </label>
+      </div>
+    </Field>
+  );
+}
+
 function CarouselConfig({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
   const images = (config.images as string[]) || [''];
   const updateImage = (idx: number, val: string) => {
@@ -311,6 +341,7 @@ function CarouselConfig({ config, set }: { config: Record<string, unknown>; set:
         )}
       </Field>
       <CaptionHashtagFields config={config} set={set} />
+      <CrossPostingToggles config={config} set={set} />
       <PostTimingSelector config={config} set={set} />
     </>
   );
@@ -326,6 +357,7 @@ function SinglePostConfig({ config, set }: { config: Record<string, unknown>; se
           onChange={(e) => set('imageUrl', e.target.value)} />
       </Field>
       <CaptionHashtagFields config={config} set={set} />
+      <CrossPostingToggles config={config} set={set} />
       <PostTimingSelector config={config} set={set} />
     </>
   );
@@ -361,6 +393,7 @@ function ReelConfig({ config, set }: { config: Record<string, unknown>; set: (k:
           <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Share to Feed</span>
         </label>
       </Field>
+      <CrossPostingToggles config={config} set={set} />
       <PostTimingSelector config={config} set={set} />
     </>
   );
