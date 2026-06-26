@@ -360,14 +360,7 @@ export default function AnalyticsPage() {
       )}
 
       {/* Top Title & Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '28px',
-        flexWrap: 'wrap',
-        gap: '16px'
-      }}>
+      <div className="analytics-header">
         <div>
           <h1 style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 800, marginBottom: '6px' }} className="gradient-text">
             Analytics Overview
@@ -396,7 +389,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Overview Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))', gap: isMobile ? '12px' : '20px', marginBottom: '28px' }}>
+      <div className="analytics-stats-grid" style={{ marginBottom: '28px' }}>
         {/* Followers Gained */}
         <div className="card" style={{ padding: isMobile ? '16px' : '24px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
@@ -453,10 +446,17 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Main Charts Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 2.2fr))', gap: isMobile ? '16px' : '24px', marginBottom: '28px' }}>
+      <div className="analytics-charts-grid" style={{ marginBottom: '28px' }}>
         {/* Line Chart: Post Engagement */}
-        <div className="card" style={{ padding: isMobile ? '16px' : '24px', gridColumn: isMobile ? 'auto' : 'span 2' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div className="card chart-card-double" style={{ padding: isMobile ? '16px' : '24px' }}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between', 
+            alignItems: isMobile ? 'flex-start' : 'center', 
+            gap: isMobile ? '10px' : '20px',
+            marginBottom: '20px' 
+          }}>
             <div>
               <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Post Engagement Overview</h2>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Daily reach & interaction values</span>
@@ -637,7 +637,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Calendar & Recent Table Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
+      <div className="analytics-calendar-grid">
         {/* Performance Table */}
         <div className="card" style={{ padding: isMobile ? '12px' : '24px' }}>
           <h2 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
@@ -714,7 +714,7 @@ export default function AnalyticsPage() {
 
           {/* Calendar Grid */}
           <div style={{ width: '100%', overflowX: 'auto', margin: isMobile ? '0 -4px' : '0' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: isMobile ? '3px' : '6px', minWidth: isMobile ? '310px' : 'auto' }}>
+            <div className="calendar-grid">
               {/* Weekday Headers */}
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                 <div key={day} style={{ textAlign: 'center', fontSize: isMobile ? '8px' : '10px', fontWeight: 700, color: 'var(--text-muted)', paddingBottom: '6px', textTransform: 'uppercase' }}>
@@ -733,18 +733,7 @@ export default function AnalyticsPage() {
                 return (
                   <div 
                     key={`day-${day}`} 
-                    style={{ 
-                      aspectRatio: '1', 
-                      background: 'var(--bg-primary)', 
-                      border: '1px solid var(--border)', 
-                      borderRadius: isMobile ? '4px' : '8px', 
-                      padding: isMobile ? '2px' : '4px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      minHeight: isMobile ? '36px' : '48px',
-                      position: 'relative'
-                    }}
+                    className="calendar-cell"
                   >
                     {/* Day Number */}
                     <span style={{ fontSize: isMobile ? '8px' : '10px', fontWeight: 700, color: 'var(--text-muted)' }}>{day}</span>
@@ -754,17 +743,11 @@ export default function AnalyticsPage() {
                       {events.map((ev, eIdx) => (
                         <div 
                           key={eIdx} 
+                          className="calendar-event"
                           style={{ 
-                            fontSize: isMobile ? '6px' : '8px', 
-                            fontWeight: 700, 
-                            padding: isMobile ? '0px 1px' : '1px 3px', 
-                            borderRadius: isMobile ? '1.5px' : '3px',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            background: ev.type === 'run' ? 'rgba(16,185,129,0.15)' : 'rgba(124,58,237,0.15)',
-                            color: ev.type === 'run' ? '#10b981' : 'var(--accent-light)',
-                            border: `0.5px solid ${ev.type === 'run' ? 'rgba(16,185,129,0.3)' : 'rgba(124,58,237,0.3)'}`
+                            background: ev.type === 'run' ? 'rgba(13, 148, 136, 0.08)' : 'rgba(6, 148, 148, 0.08)',
+                            color: ev.type === 'run' ? '#0d9488' : 'var(--accent)',
+                            border: `0.5px solid ${ev.type === 'run' ? 'rgba(13, 148, 136, 0.2)' : 'rgba(6, 148, 148, 0.2)'}`
                           }}
                           title={ev.label}
                         >

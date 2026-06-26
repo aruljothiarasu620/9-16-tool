@@ -39,9 +39,13 @@ export default function MobileHeader() {
         {/* Logo + Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img
-            src="/logo.jpg"
+            src="/logo.png?v=4"
             alt="InstaFlow"
-            style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover' }}
+            style={{ 
+              width: '32px', 
+              height: '32px', 
+              objectFit: 'contain',
+            }}
           />
           <div>
             <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>

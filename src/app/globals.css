@@ -1,20 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0f0f1a;
-  --bg-card: #1a1a2e;
-  --bg-card-hover: #1e1e35;
-  --border: #2d2d4e;
-  --accent: #7c3aed;
-  --accent-light: #9d5af5;
-  --accent-glow: rgba(124, 58, 237, 0.3);
-  --pink: #db2777;
-  --pink-light: #ec4899;
-  --text-primary: #e2e2f0;
-  --text-muted: #9ca3b0;
-  --success: #10b981;
-  --error: #ef4444;
-  --warning: #f59e0b;
+  --bg-primary: #f1f5f9; /* cool slate light gray background */
+  --bg-card: #ffffff; /* crisp white cards */
+  --bg-card-hover: #f8fafc; /* slate-50 hover */
+  --border: #cbd5e1; /* visible slate-300 borders */
+  
+  --accent: #069494; /* vibrant teal */
+  --accent-light: #08a3a3;
+  --accent-glow: rgba(6, 148, 148, 0.15);
+  
+  --pink: #e0338f; /* bubblegum pink (tweaked for readable contrast) */
+  --pink-light: #ff69b4; /* bright bubblegum pink */
+  
+  --text-primary: #0f172a; /* slate-900 */
+  --text-muted: #64748b; /* slate-500 */
+  --success: #0d9488;
+  --error: #e11d48;
+  --warning: #d97706;
 }
 
 * {
@@ -112,14 +115,15 @@ body {
 /* Card styles */
 .card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
   transition: all 0.3s ease;
 }
 
 .card:hover {
   border-color: var(--accent);
-  box-shadow: 0 0 20px var(--accent-glow);
+  box-shadow: 0 4px 16px rgba(6, 148, 148, 0.12);
 }
 
 /* Button styles */
@@ -170,27 +174,27 @@ body {
 }
 
 .badge-active {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(13, 148, 136, 0.08);
+  color: #0d9488;
+  border: 1px solid rgba(13, 148, 136, 0.2);
 }
 
 .badge-inactive {
-  background: rgba(156, 163, 176, 0.15);
-  color: #9ca3b0;
-  border: 1px solid rgba(156, 163, 176, 0.3);
+  background: rgba(100, 116, 139, 0.08);
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.2);
 }
 
 .badge-running {
-  background: rgba(124, 58, 237, 0.15);
-  color: #9d5af5;
-  border: 1px solid rgba(124, 58, 237, 0.3);
+  background: rgba(6, 148, 148, 0.08);
+  color: #069494;
+  border: 1px solid rgba(6, 148, 148, 0.2);
 }
 
 .badge-failed {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(225, 29, 72, 0.08);
+  color: #e11d48;
+  border: 1px solid rgba(225, 29, 72, 0.2);
 }
 
 /* Input styles */
@@ -236,9 +240,9 @@ body {
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(219,39,119,0.1));
-  color: var(--accent-light);
-  border: 1px solid rgba(124,58,237,0.3);
+  background: linear-gradient(135deg, rgba(6, 148, 148, 0.1), rgba(255, 105, 180, 0.15));
+  color: var(--accent);
+  border: 1px solid rgba(6, 148, 148, 0.25);
 }
 
 /* Module chip in sidebar */
@@ -842,3 +846,101 @@ input:checked + .toggle-slider:before {
 .mobile-nav-toggle {
   display: none !important;
 }
+
+/* Analytics Dashboard Layouts */
+.analytics-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.analytics-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.analytics-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.chart-card-double {
+  grid-column: span 2;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+.calendar-cell {
+  aspect-ratio: 1;
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 48px;
+  position: relative;
+}
+
+.calendar-event {
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 3px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .chart-card-double {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .analytics-charts-grid,
+  .analytics-calendar-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .calendar-grid {
+    gap: 3px;
+    min-width: 310px;
+  }
+  .calendar-cell {
+    border-radius: 4px;
+    padding: 2px;
+    min-height: 38px;
+  }
+  .calendar-event {
+    font-size: 6px;
+    padding: 0 1px;
+    border-radius: 1.5px;
+  }
+  .analytics-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+

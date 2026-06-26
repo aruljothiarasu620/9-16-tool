@@ -68,7 +68,7 @@ export default function DashboardPage() {
       {/* Stats Row */}
       <div className="responsive-grid stats-grid" style={{ marginBottom: '28px' }}>
         {[
-          { label: 'Total Scenarios', value: stats.total, color: '#7c3aed', icon: '⚡' },
+          { label: 'Total Scenarios', value: stats.total, color: 'var(--accent)', icon: '⚡' },
           { label: 'Active', value: stats.active, color: '#10b981', icon: '✅' },
           { label: 'Successful Runs', value: stats.success, color: '#06b6d4', icon: '🚀' },
           { label: 'Failed Runs', value: stats.failed, color: '#ef4444', icon: '❌' },
@@ -94,7 +94,7 @@ export default function DashboardPage() {
               borderRadius: '20px',
               border: '1px solid',
               borderColor: filter === f ? 'var(--accent)' : 'var(--border)',
-              background: filter === f ? 'rgba(124,58,237,0.2)' : 'transparent',
+              background: filter === f ? 'var(--accent-glow)' : 'transparent',
               color: filter === f ? 'var(--accent-light)' : 'var(--text-muted)',
               cursor: 'pointer',
               fontSize: '13px',

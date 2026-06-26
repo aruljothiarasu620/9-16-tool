@@ -1,0 +1,7 @@
+node_modules
+.next
+screenshot_extracted
+WEBSITE
+*.mp4
+*.zip
+tsconfig.tsbuildinfo

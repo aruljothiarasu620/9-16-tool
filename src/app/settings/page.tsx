@@ -170,7 +170,7 @@ export default function SettingsPage() {
                   <div style={{
                     width: '40px', height: '40px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #7c3aed, #db2777)',
+                    background: 'linear-gradient(135deg, var(--accent), var(--pink))',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     overflow: 'hidden', border: '2px solid var(--accent)',
                     flexShrink: 0

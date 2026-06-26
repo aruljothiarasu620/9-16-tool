@@ -213,81 +213,378 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return (
-      <div style={{
+      <div className="auth-container" style={{
         position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'var(--bg-primary)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        display: 'flex',
+        fontFamily: "'Inter', system-ui, sans-serif",
       }}>
-        <div style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: '20px',
+        {/* ── LEFT PANEL: White form area ── */}
+        <div className="auth-left-panel" style={{
+          flex: '0 0 45%',
+          background: '#f8f8fa',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '48px 40px',
-          width: '380px',
-          maxWidth: 'calc(100vw - 32px)',
-          textAlign: 'center',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
+          position: 'relative',
+          overflowY: 'auto',
         }}>
+          {/* Mobile-only logo */}
           <div style={{
-            width: '64px', height: '64px',
-            background: 'linear-gradient(135deg, #7c3aed, #db2777)',
-            borderRadius: '16px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '30px', margin: '0 auto 20px',
-          }}>⚡</div>
+            position: 'absolute', top: '24px', left: '28px',
+            display: 'flex', alignItems: 'center', gap: '10px',
+          }}>
+            <img 
+              src="/logo.png?v=4" 
+              alt="Logo" 
+              style={{ width: '32px', height: '32px', objectFit: 'contain' }} 
+            />
+            <span style={{ fontWeight: 800, fontSize: '18px', color: '#1a1a2e', letterSpacing: '-0.3px' }}>InstaFlow</span>
+          </div>
 
-          <h1 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '8px' }}
-            className="gradient-text">
-            Welcome to InstaFlow
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '32px', lineHeight: 1.6 }}>
-            Sign in with your Google account to access your Instagram automation dashboard.
-          </p>
-
-          {error && (
-            <div style={{
-              padding: '10px 14px', marginBottom: '16px',
-              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-              borderRadius: '8px', color: '#ef4444', fontSize: '13px',
+          <div style={{ width: '100%', maxWidth: '360px', animation: 'fadeIn 0.4s ease' }}>
+            <h1 style={{
+              fontSize: '28px', fontWeight: 800, color: '#0f0f1a',
+              marginBottom: '8px', letterSpacing: '-0.5px',
             }}>
-              {error}
-            </div>
-          )}
+              Sign in
+            </h1>
+            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '32px' }}>
+              Welcome back. Access your automation dashboard.
+            </p>
 
-          <button
-            onClick={handleGoogleLogin}
-            disabled={signingIn}
-            style={{
-              width: '100%', padding: '14px',
-              background: 'white', color: '#1f2937',
-              border: 'none', borderRadius: '10px',
-              cursor: signingIn ? 'not-allowed' : 'pointer',
-              fontWeight: 700, fontSize: '15px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
-              opacity: signingIn ? 0.7 : 1,
-              transition: 'opacity 0.2s',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            }}
-          >
-            {signingIn ? (
-              <>
-                <span style={{ animation: 'spin 0.8s linear infinite', display: 'inline-block' }}>⟳</span>
-                Signing in...
-              </>
-            ) : (
-              <>
-                <img src="https://www.google.com/favicon.ico" alt="G" style={{ width: '20px', height: '20px' }} />
-                Continue with Google
-              </>
+            {error && (
+              <div style={{
+                padding: '10px 14px', marginBottom: '20px',
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
+                borderRadius: '10px', color: '#dc2626', fontSize: '13px',
+              }}>
+                {error}
+              </div>
             )}
-          </button>
 
-          <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '20px', lineHeight: 1.6 }}>
-            Your data is stored securely in Firebase and linked to your Google account.
-            <br />
-            <a href="/privacy" style={{ color: 'var(--accent-light)', textDecoration: 'none' }}>Privacy Policy</a>
-          </p>
+            {/* Google Button */}
+            <button
+              id="google-signin-btn"
+              onClick={handleGoogleLogin}
+              disabled={signingIn}
+              onMouseEnter={(e) => {
+                if (!signingIn) {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--accent)';
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 16px var(--accent-glow)';
+                  (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = '#e5e7eb';
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+              }}
+              style={{
+                width: '100%', padding: '14px 20px',
+                background: 'white', color: '#111827',
+                border: '1.5px solid #e5e7eb',
+                borderRadius: '10px',
+                cursor: signingIn ? 'not-allowed' : 'pointer',
+                fontWeight: 600, fontSize: '15px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+                opacity: signingIn ? 0.6 : 1,
+                transition: 'all 0.2s ease',
+                boxShadow: 'none',
+                fontFamily: 'inherit',
+                marginBottom: '24px',
+              }}
+            >
+              {signingIn ? (
+                <>
+                  <div style={{
+                    width: '20px', height: '20px',
+                    border: '2.5px solid var(--accent-glow)',
+                    borderTopColor: 'var(--accent)',
+                    borderRadius: '50%',
+                    animation: 'spin 0.7s linear infinite',
+                    flexShrink: 0,
+                  }} />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    <path fill="none" d="M0 0h48v48H0z"/>
+                  </svg>
+                  Sign in with Google
+                </>
+              )}
+            </button>
+
+            <p style={{ fontSize: '11px', color: '#9ca3af', textAlign: 'center', lineHeight: 1.7 }}>
+              By signing in, you agree to our{' '}
+              <a href="/privacy" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
+                Privacy Policy
+              </a>
+              .
+            </p>
+          </div>
         </div>
+
+        {/* ── RIGHT PANEL: Dark purple branding ── */}
+        <div className="auth-right-panel" style={{
+          flex: 1,
+          background: 'linear-gradient(160deg, #0b0f17 0%, #1a2333 40%, #070a10 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '48px 40px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          {/* Background glow effects */}
+          <div style={{
+            position: 'absolute', width: '500px', height: '500px',
+            background: 'radial-gradient(circle, rgba(0,240,255,0.15) 0%, transparent 65%)',
+            top: '-100px', right: '-100px',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute', width: '400px', height: '400px',
+            background: 'radial-gradient(circle, rgba(255,105,180,0.12) 0%, transparent 65%)',
+            bottom: '-80px', left: '-80px',
+            pointerEvents: 'none',
+          }} />
+          {/* Dot grid */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+            pointerEvents: 'none',
+          }} />
+
+          {/* Top-right logo (Desktop only) */}
+          <div className="desktop-logo-only" style={{
+            position: 'absolute', top: '28px', right: '32px',
+            display: 'flex', alignItems: 'center', gap: '10px',
+          }}>
+            <img 
+              src="/logo.png?v=4" 
+              alt="Logo" 
+              style={{ 
+                width: '36px', 
+                height: '36px', 
+                objectFit: 'contain',
+                animation: 'float 3s ease-in-out infinite',
+              }} 
+            />
+            <span style={{ fontWeight: 800, fontSize: '18px', color: 'white', letterSpacing: '-0.3px' }}>InstaFlow</span>
+          </div>
+
+          {/* Main branding text */}
+          <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: '420px', width: '100%' }}>
+            {/* Mobile Logo */}
+            <div className="mobile-logo-only" style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              marginBottom: '24px',
+            }}>
+              <img 
+                src="/logo.png?v=4" 
+                alt="Logo" 
+                style={{ width: '36px', height: '36px', objectFit: 'contain' }} 
+              />
+              <span style={{ fontWeight: 800, fontSize: '18px', color: 'white', letterSpacing: '-0.3px' }}>InstaFlow</span>
+            </div>
+
+            <h2 style={{
+              fontSize: 'clamp(32px, 4vw, 52px)',
+              fontWeight: 900,
+              color: 'white',
+              lineHeight: 1.1,
+              marginBottom: '16px',
+              letterSpacing: '-1px',
+            }}>
+              Automate smarter
+            </h2>
+            <h2 style={{
+              fontSize: 'clamp(32px, 4vw, 52px)',
+              fontWeight: 900,
+              background: 'linear-gradient(135deg, var(--accent), var(--pink))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              lineHeight: 1.1,
+              marginBottom: '28px',
+              letterSpacing: '-1px',
+            }}>
+              #withInstaFlow
+            </h2>
+
+            <p style={{
+              fontSize: '16px', color: 'rgba(255,255,255,0.65)',
+              lineHeight: 1.7, marginBottom: '40px',
+            }}>
+              From scheduling to analytics, build and automate your
+              entire Instagram workflow in one powerful visual platform.
+            </p>
+
+            {/* Mobile Sign In Section */}
+            <div className="mobile-login-container">
+              {error && (
+                <div style={{
+                  padding: '10px 14px', marginBottom: '20px',
+                  background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
+                  borderRadius: '10px', color: '#fca5a5', fontSize: '13px',
+                  textAlign: 'left',
+                }}>
+                  {error}
+                </div>
+              )}
+
+              <button
+                onClick={handleGoogleLogin}
+                disabled={signingIn}
+                style={{
+                  width: '100%', padding: '14px 20px',
+                  background: 'white', color: '#111827',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: signingIn ? 'not-allowed' : 'pointer',
+                  fontWeight: 600, fontSize: '15px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+                  opacity: signingIn ? 0.6 : 1,
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                  fontFamily: 'inherit',
+                  marginBottom: '20px',
+                }}
+              >
+                {signingIn ? (
+                  <>
+                    <div style={{
+                      width: '20px', height: '20px',
+                      border: '2.5px solid var(--accent-glow)',
+                      borderTopColor: 'var(--accent)',
+                      borderRadius: '50%',
+                      animation: 'spin 0.7s linear infinite',
+                      flexShrink: 0,
+                    }} />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                      <path fill="none" d="M0 0h48v48H0z"/>
+                    </svg>
+                    Sign in with Google
+                  </>
+                )}
+              </button>
+
+              <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 1.7, marginBottom: '0' }}>
+                By signing in, you agree to our{' '}
+                <a href="/privacy" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
+                  Privacy Policy
+                </a>
+                .
+              </p>
+            </div>
+
+            {/* Trust badges */}
+            <div style={{
+              display: 'flex', justifyContent: 'center',
+              gap: '8px', flexWrap: 'wrap',
+            }}>
+              {[
+                { icon: '⚡', text: 'Auto-Post' },
+                { icon: '🔄', text: 'Scenarios' },
+                { icon: '📊', text: 'Analytics' },
+                { icon: '🔒', text: 'Secure' },
+              ].map((item) => (
+                <div key={item.text} style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '20px',
+                  padding: '6px 14px',
+                  fontSize: '13px', fontWeight: 500,
+                  color: 'rgba(255,255,255,0.85)',
+                }}>
+                  <span>{item.icon}</span>
+                  <span>{item.text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Social proof line */}
+            <p style={{
+              marginTop: '36px', fontSize: '13px',
+              color: 'rgba(255,255,255,0.4)',
+              letterSpacing: '0.3px',
+            }}>
+              Trusted by Instagram creators · Free forever
+            </p>
+          </div>
+        </div>
+
+        {/* ── MOBILE RESPONSIVE MERGE STYLING ── */}
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+          }
+          
+          .mobile-login-container {
+            display: none;
+          }
+          .mobile-logo-only {
+            display: none;
+          }
+
+          @media (max-width: 768px) {
+            .auth-container {
+              flex-direction: column !important;
+            }
+            .auth-left-panel {
+              display: none !important;
+            }
+            .auth-right-panel {
+              flex: 1 1 100% !important;
+              width: 100% !important;
+              min-height: 100vh !important;
+              padding: 40px 24px !important;
+              justify-content: center !important;
+            }
+            .mobile-login-container {
+              display: block !important;
+              width: 100% !important;
+              max-width: 360px !important;
+              margin: 24px auto 32px !important;
+              animation: fadeIn 0.4s ease !important;
+            }
+            .mobile-logo-only {
+              display: flex !important;
+            }
+            .desktop-logo-only {
+              display: none !important;
+            }
+          }
+        `}</style>
       </div>
     );
   }

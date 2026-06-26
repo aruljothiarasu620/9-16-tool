@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# large temporary files
+/screenshot_extracted/
+/*.zip
+/*.mp4
+/*.docx

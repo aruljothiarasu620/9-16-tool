@@ -229,7 +229,7 @@ export default function AdminPage() {
       {/* Real Stats */}
       <div className="responsive-grid" style={{ marginBottom: '32px' }}>
         {[
-          { label: 'Total Registered Users', value: loadingData ? '...' : allUsers.length, color: '#7c3aed', icon: '👥' },
+          { label: 'Total Registered Users', value: loadingData ? '...' : allUsers.length, color: 'var(--accent)', icon: '👥' },
           { label: 'Total Connected IG Accounts', value: loadingData ? '...' : totalConnectedAccounts, color: '#E1306C', icon: '📸' },
           { label: 'Platform Status', value: 'Healthy', color: '#10b981', icon: '🟢' },
           { label: 'Errors Today', value: '0', color: '#ef4444', icon: '⚠️' },

@@ -66,18 +66,29 @@ export default function Sidebar() {
         }}
       >
         {/* Logo */}
-        <div style={{ padding: '0 8px 28px', borderBottom: '1px solid var(--border)', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img 
-            src="/logo.jpg" 
-            alt="Logo" 
-            style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover' }} 
-          />
-          <div className="sidebar-label">
-            <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>InstaFlow</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>made by mamitha.crushae</div>
+        <div style={{ padding: '8px 8px 20px', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <img 
+              src="/logo.png?v=4" 
+              alt="Logo" 
+              style={{ 
+                width: '44px', 
+                height: '44px', 
+                objectFit: 'contain',
+              }} 
+            />
+            <span 
+              className="sidebar-label" 
+              style={{ 
+                fontWeight: 800, 
+                fontSize: '20px', 
+                color: 'var(--text-primary)', 
+                letterSpacing: '-0.4px' 
+              }}
+            >
+              InstaFlow
+            </span>
           </div>
-        </div>
         </div>
 
         {/* Nav */}
@@ -115,7 +126,7 @@ export default function Sidebar() {
             </span>
             <span className="sidebar-label">Help & Guide</span>
             <span className="sidebar-label" style={{
-              marginLeft: 'auto', background: '#7c3aed', color: 'white',
+              marginLeft: 'auto', background: 'var(--accent)', color: 'white',
               fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '10px'
             }}>NEW</span>
           </button>
@@ -173,9 +184,9 @@ export default function Sidebar() {
         <div style={{
           position: 'fixed', top: 0, right: 0, bottom: 0,
           width: '100%', maxWidth: '340px',
-          background: '#13101f', borderLeft: '1px solid var(--border)',
+          background: 'var(--bg-card)', borderLeft: '1px solid var(--border)',
           zIndex: 1000, display: 'flex', flexDirection: 'column',
-          boxShadow: isHelpOpen ? '-4px 0 24px rgba(0,0,0,0.5)' : 'none',
+          boxShadow: isHelpOpen ? '-4px 0 24px rgba(0,0,0,0.1)' : 'none',
           transform: isHelpOpen ? 'translateX(0)' : 'translateX(100%)',
           transition: 'transform 0.3s ease-out, box-shadow 0.3s ease-out',
         }}>

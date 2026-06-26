@@ -70,7 +70,7 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
       sourceHandle: c.sourceHandle,
       targetHandle: c.targetHandle,
       animated: true,
-      style: { stroke: '#7c3aed', strokeWidth: 2 },
+      style: { stroke: 'var(--accent)', strokeWidth: 2 },
     }));
     setNodes(flowNodes);
     setEdges(flowEdges);
@@ -82,7 +82,7 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
         ...params,
         id: generateId(),
         animated: true,
-        style: { stroke: '#7c3aed', strokeWidth: 2 },
+        style: { stroke: 'var(--accent)', strokeWidth: 2 },
       } as Edge;
       setEdges((eds) => addEdge(edge, eds));
       addConnection(scenarioId, {
@@ -604,7 +604,7 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
           </button>
           <button onClick={handleRun} disabled={isRunning}
             style={{
-              background: isRunning ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg, #7c3aed, #db2777)',
+              background: isRunning ? 'var(--accent-glow)' : 'linear-gradient(135deg, var(--accent), var(--pink))',
               color: 'white', border: 'none', borderRadius: '8px', 
               padding: isMobile ? '6px 12px' : '8px 18px',
               cursor: isRunning ? 'not-allowed' : 'pointer',
@@ -702,10 +702,10 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
             deleteKeyCode="Delete"
             style={{ background: 'var(--bg-primary)' }}
           >
-            <Background variant={BackgroundVariant.Dots} color="#2d2d4e" gap={24} size={1} />
+            <Background variant={BackgroundVariant.Dots} color="#cbd5e1" gap={24} size={1} />
             <Controls />
             <MiniMap
-              nodeColor={() => '#7c3aed'}
+              nodeColor={() => 'var(--accent)'}
               style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
             />
           </ReactFlow>

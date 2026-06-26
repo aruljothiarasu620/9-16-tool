@@ -305,7 +305,7 @@ export default function InstagramPage() {
                   <div style={{
                     width: '52px', height: '52px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #7c3aed, #db2777)',
+                    background: 'linear-gradient(135deg, var(--accent), var(--pink))',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '22px',
                     flexShrink: 0,
