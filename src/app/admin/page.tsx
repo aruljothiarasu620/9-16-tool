@@ -21,6 +21,9 @@ export default function AdminPage() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+  // Website Config State
+  const [showPricing, setShowPricing] = useState(true);
+
   // URL modal settings
   const [selectedUserUrls, setSelectedUserUrls] = useState<any | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
@@ -123,8 +126,28 @@ export default function AdminPage() {
         setMetaAppId(data.appId || '');
         setMetaAppSecret(data.appSecret || '');
       }
+
+      // Fetch showPricing visibility setting
+      const settingsRef = doc(db, 'config', 'settings');
+      const settingsSnap = await getDoc(settingsRef);
+      if (settingsSnap.exists()) {
+        setShowPricing(settingsSnap.data().showPricing !== false);
+      }
     } catch (err) {
-      console.error('Error fetching Meta config:', err);
+      console.error('Error fetching config settings:', err);
+    }
+  };
+
+  const togglePricingVisibility = async (newVal: boolean) => {
+    setShowPricing(newVal);
+    try {
+      await setDoc(doc(db, 'config', 'settings'), {
+        showPricing: newVal,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (err) {
+      console.error('Error saving pricing toggle settings:', err);
+      alert('Failed to save visibility settings to Cloud Firestore.');
     }
   };
 
@@ -296,6 +319,61 @@ export default function AdminPage() {
         >
           {savingSettings ? 'Saving...' : 'Save Meta Config'}
         </button>
+      </div>
+
+      {/* Website configurations control box */}
+      <div className="card" style={{ padding: '28px', marginBottom: '24px', border: '1px solid var(--accent-glow)' }}>
+        <h2 style={{ fontWeight: 700, fontSize: '18px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          ⚙️ Website Configuration
+        </h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
+          Control public page visibility settings. Disabling pricing will completely hide the pricing plans block from the landing page.
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: 'var(--bg-primary)', borderRadius: '12px' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px' }}>Public Pricing Plans Page</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              {showPricing ? '🟢 Visible to all visitors (On)' : '🔴 Hidden from all visitors (Off)'}
+            </div>
+          </div>
+          
+          <label style={{
+            position: 'relative',
+            display: 'inline-block',
+            width: '48px',
+            height: '24px',
+            cursor: 'pointer'
+          }}>
+            <input
+              type="checkbox"
+              checked={showPricing}
+              onChange={(e) => togglePricingVisibility(e.target.checked)}
+              style={{ opacity: 0, width: 0, height: 0 }}
+            />
+            <span style={{
+              position: 'absolute',
+              cursor: 'pointer',
+              top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: showPricing ? 'var(--accent)' : '#ccc',
+              transition: '.3s',
+              borderRadius: '24px'
+            }}>
+              <span style={{
+                position: 'absolute',
+                content: '""',
+                height: '18px',
+                width: '18px',
+                left: '3px',
+                bottom: '3px',
+                backgroundColor: 'white',
+                transition: '.3s',
+                borderRadius: '50%',
+                transform: showPricing ? 'translateX(24px)' : 'none'
+              }} />
+            </span>
+          </label>
+        </div>
       </div>
 
       {/* Real User Management Table */}

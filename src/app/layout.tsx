@@ -1,10 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import Sidebar from '@/components/Sidebar';
 import AuthGuard from '@/components/AuthGuard';
-import MobileBottomNav from '@/components/MobileBottomNav';
-import MobileHeader from '@/components/MobileHeader';
-import MobileMainWrapper from '@/components/MobileMainWrapper';
 
 export const metadata: Metadata = {
   title: 'InstaFlow - Instagram Automation Builder | FullSizePost',
@@ -55,14 +51,7 @@ export default function RootLayout({
       </head>
       <body>
         <AuthGuard>
-          <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
-            <Sidebar />
-            <MobileHeader />
-            <MobileMainWrapper>
-              {children}
-            </MobileMainWrapper>
-            <MobileBottomNav />
-          </div>
+          {children}
         </AuthGuard>
       </body>
     </html>

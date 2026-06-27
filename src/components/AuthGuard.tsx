@@ -6,9 +6,14 @@ import { auth, loginWithGoogle, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useStore } from '@/lib/store';
 import { useRouter, usePathname } from 'next/navigation';
+import LandingPage from './LandingPage';
+import Sidebar from './Sidebar';
+import MobileHeader from './MobileHeader';
+import MobileBottomNav from './MobileBottomNav';
+import MobileMainWrapper from './MobileMainWrapper';
 
 const ADMIN_EMAIL = 'aruljothiarasu620@gmail.com';
-const PUBLIC_ROUTES = ['/privacy'];
+const PUBLIC_ROUTES = ['/privacy', '/verified'];
 
 // UID-scoped localStorage key — NEVER shares data between different users
 const lsKey = (uid: string) => `ig_accounts_${uid}`;
@@ -212,6 +217,15 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
+    if (pathname === '/') {
+      return (
+        <LandingPage
+          handleLogin={handleGoogleLogin}
+          signingIn={signingIn}
+          error={error}
+        />
+      );
+    }
     return (
       <div className="auth-container" style={{
         position: 'fixed', inset: 0, zIndex: 9999,
@@ -589,5 +603,14 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+      <Sidebar />
+      <MobileHeader />
+      <MobileMainWrapper>
+        {children}
+      </MobileMainWrapper>
+      <MobileBottomNav />
+    </div>
+  );
 }
