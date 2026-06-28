@@ -7,11 +7,74 @@ import { formatTimeAgo, formatDate } from '@/lib/utils';
 import { generateId } from '@/lib/utils';
 
 export default function DashboardPage() {
-  const { scenarios, runLogs, addScenario, updateScenario, deleteScenario } = useStore();
+  const store = useStore();
+  const { scenarios, runLogs, addScenario, updateScenario, deleteScenario } = store;
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [showMediaLinksModal, setShowMediaLinksModal] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  const handleCopyUrl = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    setTimeout(() => setCopiedUrl(null), 2000);
+  };
+
+  const extractUrls = () => {
+    const urls: { source: string; url: string; type: string }[] = [];
+    
+    // 1. Extract from scenarios
+    if (Array.isArray(scenarios)) {
+      scenarios.forEach((scen: any) => {
+        if (scen && Array.isArray(scen.modules)) {
+          scen.modules.forEach((mod: any) => {
+            if (mod && mod.config) {
+              if (typeof mod.config.imageUrl === 'string' && mod.config.imageUrl.trim()) {
+                urls.push({
+                  source: `Scenario: ${scen.name || 'Unnamed'} (${mod.label || 'Unnamed'})`,
+                  url: mod.config.imageUrl.trim(),
+                  type: 'Configured Image'
+                });
+              }
+              if (Array.isArray(mod.config.images)) {
+                mod.config.images.forEach((img: any, idx: number) => {
+                  if (typeof img === 'string' && img.trim()) {
+                    urls.push({
+                      source: `Scenario: ${scen.name || 'Unnamed'} (${mod.label || 'Unnamed'} - Slide ${idx + 1})`,
+                      url: img.trim(),
+                      type: 'Configured Image'
+                    });
+                  }
+                });
+              }
+            }
+          });
+        }
+      });
+    }
+
+    // 2. Extract from runLogs
+    if (Array.isArray(runLogs)) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      runLogs.forEach((log: any) => {
+        if (log && typeof log.details === 'string') {
+          const matches = log.details.match(urlRegex);
+          if (matches) {
+            matches.forEach((urlStr: string) => {
+              urls.push({
+                source: `Log: ${log.timestamp ? new Date(log.timestamp).toLocaleString() : 'Unknown Date'}`,
+                url: urlStr,
+                type: 'Execution Output'
+              });
+            });
+          }
+        }
+      });
+    }
+    return urls;
+  };
 
   const filtered = scenarios.filter((s) => filter === 'all' || s.status === filter);
 
@@ -59,10 +122,18 @@ export default function DashboardPage() {
             Build and automate your Instagram content workflow
           </p>
         </div>
-        <button className="btn-primary" onClick={() => setShowCreate(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-          <span>+</span> <span className="btn-label">New Scenario</span>
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {store.tier === 'lifetime' && (
+            <button className="btn-secondary" onClick={() => setShowMediaLinksModal(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', flexShrink: 0, cursor: 'pointer', fontWeight: 600 }}>
+              <span>🔗</span> <span className="btn-label">Media & Output Links</span>
+            </button>
+          )}
+          <button className="btn-primary" onClick={() => setShowCreate(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <span>+</span> <span className="btn-label">New Scenario</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Row */}
@@ -287,6 +358,85 @@ export default function DashboardPage() {
               <button className="btn-secondary" onClick={() => setDeleteConfirm(null)} style={{ flex: 1 }}>
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Media & Output Links Modal */}
+      {showMediaLinksModal && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.85)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000,
+          padding: '16px',
+        }} onClick={() => setShowMediaLinksModal(false)}>
+          <div className="card animate-fade-in" style={{ padding: '28px', width: '100%', maxWidth: '800px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}
+            onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
+              <h2 style={{ fontWeight: 800, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="gradient-text">🔗 Media & Output Links</span>
+              </h2>
+              <button 
+                onClick={() => setShowMediaLinksModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+              {(() => {
+                const urls = extractUrls();
+                if (urls.length === 0) {
+                  return (
+                    <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                      <p style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>No media or output links found.</p>
+                      <p style={{ fontSize: '13px' }}>Once your scenarios execute successfully, your generated images and published post URLs will appear here.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {urls.map((item, idx) => (
+                      <div key={idx} className="card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', background: 'var(--bg-primary)' }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                            <span className="badge" style={{
+                              background: item.type === 'Execution Output' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                              color: item.type === 'Execution Output' ? '#10b981' : '#3b82f6',
+                              border: `1px solid ${item.type === 'Execution Output' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.2)'}`,
+                              fontSize: '11px',
+                              padding: '2px 8px'
+                            }}>
+                              {item.type}
+                            </span>
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.source}</span>
+                          </div>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-light)', fontSize: '13px', textDecoration: 'underline', fontWeight: 500 }}>
+                              {item.url}
+                            </a>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <a href={item.url} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+                            🌐 Open
+                          </a>
+                          <button 
+                            className="btn-primary" 
+                            onClick={() => handleCopyUrl(item.url)}
+                            style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: copiedUrl === item.url ? '#10b981' : 'var(--accent)' }}
+                          >
+                            {copiedUrl === item.url ? '✓ Copied' : '📋 Copy'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
