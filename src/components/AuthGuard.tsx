@@ -49,7 +49,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       rel="noopener noreferrer"
       style={{
         position: 'fixed',
-        bottom: '24px',
+        bottom: '25%',
         right: '24px',
         background: '#25D366',
         width: '56px',
