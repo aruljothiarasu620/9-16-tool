@@ -93,12 +93,27 @@ export default function Sidebar() {
 
         {/* Nav */}
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-item ${pathname === item.href ? 'active' : ''}`}
-            >
+          {(() => {
+            const userTier = store.tier || 'free';
+            const isSuperAdmin = firebaseUser?.email === ADMIN_EMAIL;
+
+            const allowedNavItems = navItems.filter((item) => {
+              if (isSuperAdmin) return true;
+              if (item.href === '/img-to-url') {
+                return userTier === 'lifetime';
+              }
+              if (item.href === '/analytics') {
+                return userTier === 'yearly_saver' || userTier === 'lifetime';
+              }
+              return true;
+            });
+
+            return allowedNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-item ${pathname === item.href ? 'active' : ''}`}
+              >
               <span>{item.icon}</span>
               <span className="sidebar-label">{item.label}</span>
               {item.href === '/instagram' && store.instagramAccounts.length > 0 && (
@@ -110,7 +125,8 @@ export default function Sidebar() {
                 }} />
               )}
             </Link>
-          ))}
+            ));
+          })()}
           {/* Help & Guide */}
           <button
             onClick={() => setIsHelpOpen(true)}

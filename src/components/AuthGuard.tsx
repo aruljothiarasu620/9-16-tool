@@ -166,6 +166,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 instagramAccounts: mergedAccounts,
                 scenarios: data.scenarios || [],
                 runLogs: data.runLogs || [],
+                tier: data.tier || 'free',
               });
             } else {
               // New user — load from their UID-scoped localStorage only
@@ -174,7 +175,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 localAccounts = JSON.parse(localStorage.getItem(lsKey(uid)) || '[]');
               } catch (_) {}
               if (localAccounts.length > 0) {
-                useStore.setState({ instagramAccounts: localAccounts });
+                useStore.setState({ instagramAccounts: localAccounts, tier: 'free' });
               }
             }
 
@@ -648,6 +649,25 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         {whatsappWidget}
       </>
     );
+  }
+
+  const store = useStore();
+  const userTier = store.tier || 'free';
+  const isSuperAdmin = user?.email === 'aruljothiarasu620@gmail.com';
+
+  if (user && !isSuperAdmin) {
+    if (pathname === '/img-to-url') {
+      if (userTier !== 'lifetime') {
+        router.push('/');
+        return null;
+      }
+    }
+    if (pathname === '/analytics') {
+      if (userTier !== 'yearly_saver' && userTier !== 'lifetime') {
+        router.push('/');
+        return null;
+      }
+    }
   }
 
   return (

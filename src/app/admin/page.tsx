@@ -576,8 +576,8 @@ export default function AdminPage() {
                           >
                             <option value="free">7-Day Trial (₹0)</option>
                             <option value="monthly_pro">Monthly Pro (₹29)</option>
-                            <option value="yearly_saver">Yearly Saver (₹199)</option>
-                            <option value="lifetime">Lifetime (₹299)</option>
+                            <option value="yearly_saver">Admin Panel (Yearly)</option>
+                            <option value="lifetime">Admin Pro (One-Time)</option>
                           </select>
                         </td>
                         <td style={{ padding: '16px' }}>

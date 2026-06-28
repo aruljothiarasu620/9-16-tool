@@ -72,6 +72,7 @@ interface AppStore {
   instagramAccounts: InstagramAccount[];
   settings: AppSettings;
   activeScenarioId: string | null;
+  tier?: string;
 
   // Scenario actions
   addScenario: (scenario: Scenario) => void;
@@ -163,11 +164,9 @@ export const useStore = create<AppStore>()(
   (set) => ({
     scenarios: defaultScenarios,
     runLogs: defaultLogs,
-    // Always start with empty accounts — AuthGuard will load the correct
-    // user's data from Firestore + UID-scoped localStorage after auth resolves.
-    // This prevents a previous user's accounts briefly showing for a new user.
     instagramAccounts: [],
     activeScenarioId: null,
+    tier: 'free',
     settings: {
       facebookAppId: '2001458060448073',
       facebookAppSecret: 'fff9231ce808e506def32a87c8cef303',
