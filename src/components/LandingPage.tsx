@@ -882,41 +882,6 @@ export default function LandingPage({ handleLogin, signingIn, error }: LandingPa
         </div>
       </footer>
 
-      {/* Floating WhatsApp Contact Widget */}
-      <a 
-        href="https://wa.me/919025408167" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          background: '#25D366',
-          width: '56px',
-          height: '56px',
-          borderRadius: '50%',
-          boxShadow: '0 4px 16px rgba(37, 211, 102, 0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          transition: 'all 0.3s ease',
-          cursor: 'pointer'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.1)';
-          e.currentTarget.style.boxShadow = '0 6px 20px rgba(37, 211, 102, 0.45)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 4px 16px rgba(37, 211, 102, 0.3)';
-        }}
-        title="Chat on WhatsApp">
-        <svg viewBox="0 0 24 24" width="30" height="30" fill="white" xmlns="http://www.w3.org/2000/svg">
-          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.5-5.739-1.446L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.864.002-2.637-1.03-5.114-2.905-6.99S14.14 1.139 11.5 1.138c-5.444 0-9.87 4.423-9.873 9.869-.001 1.7.45 3.355 1.306 4.808L1.927 20.4l4.72-1.246zM17.52 14.3c-.324-.16-1.92-.949-2.219-1.059-.299-.11-.517-.16-.735.16-.217.32-.843 1.059-1.033 1.28-.19.22-.38.24-.704.08-.324-.16-1.372-.506-2.615-1.616-.966-.86-1.619-1.927-1.809-2.247-.19-.32-.02-.492.142-.651.146-.143.324-.38.486-.57.16-.19.214-.32.322-.533.109-.214.055-.4-.027-.56-.08-.16-.735-1.77-.999-2.409-.26-.628-.525-.543-.722-.553-.186-.01-.399-.01-.613-.01-.214 0-.563.08-.857.4-.294.32-1.123 1.1-1.123 2.68 0 1.58 1.149 3.11 1.307 3.32.158.21 2.261 3.45 5.476 4.84.765.33 1.36.53 1.82.68.769.24 1.47.21 2.02.13.618-.09 1.92-.786 2.19-1.547.27-.76.27-1.41.19-1.547-.08-.14-.298-.22-.622-.38z"/>
-        </svg>
-      </a>
-
       {/* Embedded Styles for animations */}
       <style>{`
         @keyframes spin {

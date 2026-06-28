@@ -138,19 +138,6 @@ export default function AdminPage() {
     }
   };
 
-  const togglePricingVisibility = async (newVal: boolean) => {
-    setShowPricing(newVal);
-    try {
-      await setDoc(doc(db, 'config', 'settings'), {
-        showPricing: newVal,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-    } catch (err) {
-      console.error('Error saving pricing toggle settings:', err);
-      alert('Failed to save visibility settings to Cloud Firestore.');
-    }
-  };
-
   const saveMetaConfig = async () => {
     setSavingSettings(true);
     setSaveStatus('idle');
@@ -168,6 +155,36 @@ export default function AdminPage() {
       setSaveStatus('error');
     } finally {
       setSavingSettings(false);
+    }
+  };
+
+  const togglePricingVisibility = async (newVal: boolean) => {
+    setShowPricing(newVal);
+    try {
+      await setDoc(doc(db, 'config', 'settings'), {
+        showPricing: newVal,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (err) {
+      console.error('Error saving pricing toggle settings:', err);
+      alert('Failed to save visibility settings to Cloud Firestore.');
+    }
+  };
+
+  const handleUpdateUserTier = async (userId: string, newTier: string) => {
+    try {
+      const docRef = doc(db, 'users', userId);
+      await setDoc(docRef, {
+        tier: newTier,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      alert(`User subscription tier updated successfully to: ${newTier}`);
+      if (user) {
+        fetchAllUsers(user);
+      }
+    } catch (err) {
+      console.error('Error updating user tier:', err);
+      alert('Failed to update subscription tier in Firestore.');
     }
   };
 
@@ -237,150 +254,219 @@ export default function AdminPage() {
     }
   };
 
+  // Restrict access if not logged in as the specific admin email
+  if (!user || user.email !== 'aruljothiarasu620@gmail.com') {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '100vh', background: '#090d16', color: '#ef4444', fontFamily: "'Inter', sans-serif"
+      }}>
+        <div style={{ textAlign: 'center', padding: '24px', background: '#111827', borderRadius: '12px', border: '1px solid #dc2626' }}>
+          <h2 style={{ marginBottom: '8px' }}>🚫 ACCESS DENIED</h2>
+          <p style={{ color: '#9ca3af', fontSize: '14px' }}>
+            You do not have permissions to access the Super Admin Dashboard.
+          </p>
+          <div style={{ marginTop: '20px' }}>
+            <Link href="/" style={{ color: 'var(--accent-light)', textDecoration: 'none', fontWeight: 600 }}>
+              ← Return Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: '32px', background: 'var(--bg-primary)', minHeight: '100vh' }}>
+    <div style={{ 
+      padding: '32px', 
+      background: '#090d16', 
+      color: '#f8fafc',
+      minHeight: '100vh',
+      fontFamily: "'Inter', sans-serif" 
+    }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '0' }} className="gradient-text">
-          🛡️ Admin Panel
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-          Restricted access · Logged in as <strong style={{ color: 'var(--accent-light)' }}>{user?.email}</strong>
-        </p>
+      <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+        <div>
+          <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '4px', letterSpacing: '-0.8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ textShadow: '0 0 12px rgba(6, 148, 148, 0.4)' }}>⚡ Super Admin Control Center</span>
+          </h1>
+          <p style={{ color: '#9ca3af', fontSize: '13px' }}>
+            Authorized Access Only · Global System Administration Engine · Logged in as <strong style={{ color: '#00f0ff' }}>{user.email}</strong>
+          </p>
+        </div>
+        <div style={{
+          background: 'rgba(6, 148, 148, 0.08)',
+          border: '1px solid rgba(6, 148, 148, 0.25)',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '12px',
+          fontWeight: 700,
+          color: '#00f0ff',
+          textTransform: 'uppercase',
+          letterSpacing: '1px',
+          boxShadow: '0 0 15px rgba(6, 148, 148, 0.15)'
+        }}>
+          🛡️ ROOT PRIVILEGES ACTIVE
+        </div>
       </div>
 
-      {/* Real Stats */}
-      <div className="responsive-grid" style={{ marginBottom: '32px' }}>
+      {/* Futuristic Telemetry Stats */}
+      <div className="responsive-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '20px',
+        marginBottom: '40px'
+      }}>
         {[
-          { label: 'Total Registered Users', value: loadingData ? '...' : allUsers.length, color: 'var(--accent)', icon: '👥' },
-          { label: 'Total Connected IG Accounts', value: loadingData ? '...' : totalConnectedAccounts, color: '#E1306C', icon: '📸' },
-          { label: 'Platform Status', value: 'Healthy', color: '#10b981', icon: '🟢' },
-          { label: 'Errors Today', value: '0', color: '#ef4444', icon: '⚠️' },
+          { label: 'Total Registered Users', value: loadingData ? '...' : allUsers.length, color: '#00ffff', icon: '👥', glow: 'rgba(0, 255, 255, 0.15)' },
+          { label: 'Total Connected IG Accounts', value: loadingData ? '...' : totalConnectedAccounts, color: '#e0338f', icon: '📸', glow: 'rgba(224, 51, 143, 0.15)' },
+          { label: 'Meta API Gateway', value: 'OPERATIONAL', color: '#10b981', icon: '⚡', glow: 'rgba(16, 185, 129, 0.15)' },
+          { label: 'System Scheduler Heartbeat', value: '15m INTERVAL', color: '#f59e0b', icon: '⏱️', glow: 'rgba(245, 158, 11, 0.15)' },
         ].map((stat) => (
-          <div key={stat.label} className="card" style={{ padding: '20px' }}>
+          <div 
+            key={stat.label} 
+            className="card" 
+            style={{ 
+              padding: '24px 20px',
+              background: '#0f172a',
+              border: `1.5px solid rgba(255, 255, 255, 0.05)`,
+              borderRadius: '16px',
+              boxShadow: `0 8px 32px rgba(0,0,0,0.2), 0 0 12px ${stat.glow}`
+            }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: stat.color }}>{stat.value}</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>{stat.label}</div>
+                <div style={{ fontSize: '26px', fontWeight: 900, color: stat.color, letterSpacing: '-0.5px' }}>{stat.value}</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '6px', fontWeight: 600 }}>{stat.label}</div>
               </div>
-              <span style={{ fontSize: '24px' }}>{stat.icon}</span>
+              <span style={{ fontSize: '26px', opacity: 0.85 }}>{stat.icon}</span>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Meta Config Section */}
-      <div className="card" style={{ padding: '28px', marginBottom: '24px', border: '1px solid var(--accent-glow)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <div>
-            <h2 style={{ fontWeight: 700, fontSize: '18px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#1877F2' }}>🛡️</span> Meta App Credentials (60-Day Token Fix)
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-              Enter your App ID and Secret to make Instagram connections last for 2 months.
-            </p>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1.2fr 0.8fr',
+        gap: '24px',
+        alignItems: 'start',
+        marginBottom: '40px'
+      }} className="super-admin-settings-row">
+        
+        {/* Meta Config Card */}
+        <div className="card" style={{ padding: '28px', background: '#0f172a', border: '1.5px solid rgba(255,255,255,0.05)', borderRadius: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              <h2 style={{ fontWeight: 800, fontSize: '18px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: '#1877F2' }}>🛡️</span> Meta App Credentials (60-Day Token Fix)
+              </h2>
+              <p style={{ color: '#9ca3af', fontSize: '12px' }}>
+                Enter your App ID and Secret to make Instagram connections last for 2 months.
+              </p>
+            </div>
+            {saveStatus === 'success' && (
+              <span style={{ color: '#10b981', fontSize: '12px', fontWeight: 700 }}>✓ Saved Successfully</span>
+            )}
           </div>
-          {saveStatus === 'success' && (
-            <span style={{ color: 'var(--success)', fontSize: '13px', fontWeight: 600 }}>✓ Saved Successfully</span>
-          )}
-        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-          <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-              Meta App ID
-            </label>
-            <input 
-              className="input" 
-              placeholder="e.g. 123456789012345"
-              value={metaAppId}
-              onChange={(e) => setMetaAppId(e.target.value)}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-              Meta App Secret
-            </label>
-            <input 
-              type="password"
-              className="input" 
-              placeholder="••••••••••••••••••••••••"
-              value={metaAppSecret}
-              onChange={(e) => setMetaAppSecret(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <button 
-          className="btn-primary" 
-          onClick={saveMetaConfig}
-          disabled={savingSettings}
-          style={{ width: 'fit-content', padding: '10px 24px' }}
-        >
-          {savingSettings ? 'Saving...' : 'Save Meta Config'}
-        </button>
-      </div>
-
-      {/* Website configurations control box */}
-      <div className="card" style={{ padding: '28px', marginBottom: '24px', border: '1px solid var(--accent-glow)' }}>
-        <h2 style={{ fontWeight: 700, fontSize: '18px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          ⚙️ Website Configuration
-        </h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
-          Control public page visibility settings. Disabling pricing will completely hide the pricing plans block from the landing page.
-        </p>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: 'var(--bg-primary)', borderRadius: '12px' }}>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px' }}>Public Pricing Plans Page</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              {showPricing ? '🟢 Visible to all visitors (On)' : '🔴 Hidden from all visitors (Off)'}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Meta App ID
+              </label>
+              <input 
+                className="input" 
+                placeholder="e.g. 123456789012345"
+                value={metaAppId}
+                onChange={(e) => setMetaAppId(e.target.value)}
+                style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px 14px', borderRadius: '8px', width: '100%', fontSize: '13px' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', display: 'block', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Meta App Secret
+              </label>
+              <input 
+                type="password"
+                className="input" 
+                placeholder="••••••••••••••••••••••••"
+                value={metaAppSecret}
+                onChange={(e) => setMetaAppSecret(e.target.value)}
+                style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px 14px', borderRadius: '8px', width: '100%', fontSize: '13px' }}
+              />
             </div>
           </div>
-          
-          <label style={{
-            position: 'relative',
-            display: 'inline-block',
-            width: '48px',
-            height: '24px',
-            cursor: 'pointer'
-          }}>
-            <input
-              type="checkbox"
-              checked={showPricing}
-              onChange={(e) => togglePricingVisibility(e.target.checked)}
-              style={{ opacity: 0, width: 0, height: 0 }}
-            />
-            <span style={{
-              position: 'absolute',
-              cursor: 'pointer',
-              top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: showPricing ? 'var(--accent)' : '#ccc',
-              transition: '.3s',
-              borderRadius: '24px'
+
+          <button 
+            className="btn-primary" 
+            onClick={saveMetaConfig}
+            disabled={savingSettings}
+            style={{ width: 'fit-content', padding: '10px 24px', background: 'linear-gradient(135deg, var(--accent), var(--pink))', borderRadius: '8px', fontWeight: 700, border: 'none', cursor: 'pointer', color: 'white' }}
+          >
+            {savingSettings ? 'Saving...' : 'Save Meta Config'}
+          </button>
+        </div>
+
+        {/* Website Configurations Box */}
+        <div className="card" style={{ padding: '28px', background: '#0f172a', border: '1.5px solid rgba(255,255,255,0.05)', borderRadius: '16px' }}>
+          <h2 style={{ fontWeight: 800, fontSize: '18px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            ⚙️ Website Configuration
+          </h2>
+          <p style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '20px' }}>
+            Control public page visibility settings. Disabling pricing will completely hide the pricing plans block from the landing page.
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#1e293b', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '13px', marginBottom: '4px' }}>Public Pricing Plans Page</div>
+              <div style={{ fontSize: '11px', color: '#9ca3af' }}>
+                {showPricing ? '🟢 Visible to all visitors (On)' : '🔴 Hidden from all visitors (Off)'}
+              </div>
+            </div>
+            
+            <label style={{
+              position: 'relative',
+              display: 'inline-block',
+              width: '48px',
+              height: '24px',
+              cursor: 'pointer'
             }}>
+              <input
+                type="checkbox"
+                checked={showPricing}
+                onChange={(e) => togglePricingVisibility(e.target.checked)}
+                style={{ opacity: 0, width: 0, height: 0 }}
+              />
               <span style={{
                 position: 'absolute',
-                content: '""',
-                height: '18px',
-                width: '18px',
-                left: '3px',
-                bottom: '3px',
-                backgroundColor: 'white',
+                cursor: 'pointer',
+                top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: showPricing ? 'var(--accent)' : '#475569',
                 transition: '.3s',
-                borderRadius: '50%',
-                transform: showPricing ? 'translateX(24px)' : 'none'
-              }} />
-            </span>
-          </label>
+                borderRadius: '24px'
+              }}>
+                <span style={{
+                  position: 'absolute',
+                  content: '""',
+                  height: '18px',
+                  width: '18px',
+                  left: '3px',
+                  bottom: '3px',
+                  backgroundColor: 'white',
+                  transition: '.3s',
+                  borderRadius: '50%',
+                  transform: showPricing ? 'translateX(24px)' : 'none'
+                }} />
+              </span>
+            </label>
+          </div>
         </div>
       </div>
 
       {/* Real User Management Table */}
-      <div className="card" style={{ padding: '28px', marginBottom: '24px' }}>
-        <h2 style={{ fontWeight: 700, fontSize: '16px', marginBottom: '8px' }}>👤 User Management</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
-          Live view of all registered users and their connected assets.
+      <div className="card" style={{ padding: '28px', background: '#0f172a', border: '1.5px solid rgba(255,255,255,0.05)', borderRadius: '16px', marginBottom: '24px' }}>
+        <h2 style={{ fontWeight: 800, fontSize: '18px', marginBottom: '8px' }}>👤 User Management & Access Rights</h2>
+        <p style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '20px' }}>
+          Live view of all registered users. Use the Subscription dropdown to manually upgrade or downgrade any user tier.
         </p>
         
         {loadingData ? (
@@ -389,20 +475,20 @@ export default function AdminPage() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', textAlign: 'left' }}>
+                <tr style={{ borderBottom: '1.5px solid rgba(255,255,255,0.1)', color: '#9ca3af', textAlign: 'left' }}>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>User Profile</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Connected IG Accounts</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Recent Activity</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>User Links</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Analytics</th>
-                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>Status</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>Subscription Tier</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {allUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: '#9ca3af' }}>
                       No users found in database yet.
                     </td>
                   </tr>
@@ -410,15 +496,15 @@ export default function AdminPage() {
                   allUsers.map((u) => {
                     const latestLog = u.runLogs?.[0];
                     return (
-                      <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <td style={{ padding: '16px' }}>
-                          <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                          <div style={{ fontWeight: 700, color: 'white', marginBottom: '4px' }}>
                             {u.name || 'Unknown User'}
                           </div>
-                          <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '2px' }}>
+                          <div style={{ color: '#9ca3af', fontSize: '12px', marginBottom: '2px' }}>
                             {u.email || 'No email saved'}
                           </div>
-                          <div style={{ color: 'var(--text-muted)', fontSize: '10px', opacity: 0.7 }}>
+                          <div style={{ color: '#64748b', fontSize: '10px' }}>
                             ID: {u.id}
                           </div>
                         </td>
@@ -426,22 +512,22 @@ export default function AdminPage() {
                           {Array.isArray(u.instagramAccounts) && u.instagramAccounts.length > 0 ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                               {u.instagramAccounts.map((acc: any) => acc && acc.username && (
-                                <span key={acc.id || acc.username} className="badge" style={{ background: 'rgba(225, 48, 108, 0.1)', color: '#E1306C', border: '1px solid rgba(225, 48, 108, 0.2)', width: 'fit-content' }}>
+                                <span key={acc.id || acc.username} className="badge" style={{ background: 'rgba(224, 51, 143, 0.08)', color: '#e0338f', border: '1px solid rgba(224, 51, 143, 0.2)', width: 'fit-content', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>
                                   @{acc.username}
                                 </span>
                               ))}
                             </div>
                           ) : (
-                            <span style={{ color: 'var(--text-muted)' }}>None</span>
+                            <span style={{ color: '#64748b' }}>None</span>
                           )}
                         </td>
-                        <td style={{ padding: '16px', color: 'var(--text-muted)' }}>
+                        <td style={{ padding: '16px', color: '#9ca3af' }}>
                           {latestLog ? (
                             <div>
-                              <div style={{ color: latestLog.status === 'success' ? '#10b981' : '#ef4444', fontWeight: 500, marginBottom: '4px' }}>
+                              <div style={{ color: latestLog.status === 'success' ? '#10b981' : '#ef4444', fontWeight: 600, marginBottom: '4px' }}>
                                 {latestLog.status === 'success' ? '✓' : '✗'} {latestLog.modulesExecuted?.join(', ') || 'Unknown Execution'}
                               </div>
-                              <div style={{ fontSize: '11px' }}>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>
                                 {new Date(latestLog.timestamp).toLocaleString()}
                               </div>
                             </div>
@@ -461,7 +547,11 @@ export default function AdminPage() {
                               gap: '6px',
                               cursor: 'pointer',
                               fontWeight: 600,
-                              whiteSpace: 'nowrap'
+                              whiteSpace: 'nowrap',
+                              background: '#1e293b',
+                              color: '#f8fafc',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              borderRadius: '6px'
                             }}
                           >
                             🔗 View Links ({extractUrls(u).length})
@@ -480,16 +570,36 @@ export default function AdminPage() {
                               cursor: 'pointer',
                               fontWeight: 600,
                               whiteSpace: 'nowrap',
-                              background: 'rgba(124, 58, 237, 0.1)',
-                              color: 'var(--accent-light)',
-                              border: '1px solid rgba(124, 58, 237, 0.2)'
+                              background: 'rgba(0, 240, 255, 0.08)',
+                              color: '#00f0ff',
+                              border: '1px solid rgba(0, 240, 255, 0.25)',
+                              borderRadius: '6px'
                             }}
                           >
                             📊 View Analytics
                           </button>
                         </td>
                         <td style={{ padding: '16px' }}>
-                          <span className="badge badge-active"><span className="status-dot active"></span> Active</span>
+                          <select
+                            value={u.tier || 'free'}
+                            onChange={(e) => handleUpdateUserTier(u.id, e.target.value)}
+                            style={{
+                              padding: '6px 10px',
+                              fontSize: '12px',
+                              background: '#1e293b',
+                              color: '#34d399',
+                              border: '1px solid #059669',
+                              borderRadius: '6px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              outline: 'none'
+                            }}
+                          >
+                            <option value="free" style={{ background: '#0f172a', color: 'white' }}>7-Day Trial (₹0)</option>
+                            <option value="monthly_pro" style={{ background: '#0f172a', color: 'white' }}>Monthly Pro (₹29)</option>
+                            <option value="yearly_saver" style={{ background: '#0f172a', color: 'white' }}>Yearly Saver (₹199)</option>
+                            <option value="lifetime" style={{ background: '#0f172a', color: 'white' }}>Lifetime (₹299)</option>
+                          </select>
                         </td>
                         <td style={{ padding: '16px' }}>
                           {u.instagramAccounts?.length > 0 ? (
@@ -504,13 +614,13 @@ export default function AdminPage() {
                                 border: 'none',
                                 borderRadius: '4px',
                                 cursor: 'pointer',
-                                fontWeight: 600,
+                                fontWeight: 700,
                               }}
                             >
                               Reset Accounts
                             </button>
                           ) : (
-                            <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Clean</span>
+                            <span style={{ color: '#64748b', fontSize: '11px' }}>Clean</span>
                           )}
                         </td>
                       </tr>
@@ -527,7 +637,7 @@ export default function AdminPage() {
       {selectedUserUrls && (
         <div style={{
           position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.75)',
+          background: 'rgba(0,0,0,0.85)',
           backdropFilter: 'blur(8px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000,
@@ -535,21 +645,24 @@ export default function AdminPage() {
         }} onClick={() => setSelectedUserUrls(null)}>
           <div className="card animate-fade-in" style={{ 
             padding: '28px', 
+            background: '#0f172a',
+            border: '1.5px solid rgba(255,255,255,0.05)',
             width: '100%', 
             maxWidth: '650px',
             maxHeight: '85vh',
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
-            gap: '20px'
+            gap: '20px',
+            borderRadius: '16px'
           }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <h2 style={{ fontWeight: 800, fontSize: '20px', marginBottom: '4px' }} className="gradient-text">
+                <h2 style={{ fontWeight: 800, fontSize: '20px', marginBottom: '4px', color: '#00f0ff' }}>
                   Media & Output Links
                 </h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-                  Extracted URLs for <strong style={{ color: 'var(--text-primary)' }}>{selectedUserUrls.name || selectedUserUrls.email}</strong>
+                <p style={{ color: '#9ca3af', fontSize: '13px' }}>
+                  Extracted URLs for <strong style={{ color: 'white' }}>{selectedUserUrls.name || selectedUserUrls.email}</strong>
                 </p>
               </div>
               <button 
@@ -557,7 +670,7 @@ export default function AdminPage() {
                 style={{ 
                   background: 'none', 
                   border: 'none', 
-                  color: 'var(--text-muted)', 
+                  color: '#9ca3af', 
                   cursor: 'pointer', 
                   fontSize: '20px',
                   padding: '4px'
@@ -572,7 +685,7 @@ export default function AdminPage() {
                 const urls = extractUrls(selectedUserUrls);
                 if (urls.length === 0) {
                   return (
-                    <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
+                    <div style={{ textAlign: 'center', padding: '48px 20px', color: '#9ca3af' }}>
                       <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔗</div>
                       <p style={{ fontSize: '13px' }}>No media or output URLs found for this user.</p>
                       <p style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>
@@ -589,24 +702,25 @@ export default function AdminPage() {
                   return (
                     <div key={idx} className="card" style={{ 
                       padding: '16px', 
-                      background: 'var(--bg-primary)',
+                      background: '#1e293b',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '14px',
-                      borderColor: 'var(--border)'
+                      borderColor: 'rgba(255,255,255,0.05)',
+                      borderRadius: '8px'
                     }}>
                       {/* Image Thumbnail */}
                       <div style={{ 
                         width: '56px', 
                         height: '56px', 
                         borderRadius: '8px', 
-                        background: 'var(--bg-card)', 
+                        background: '#0f172a', 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'center',
                         overflow: 'hidden',
                         flexShrink: 0,
-                        border: '1px solid var(--border)'
+                        border: '1px solid rgba(255,255,255,0.05)'
                       }}>
                         {isImage ? (
                           <img 
@@ -635,13 +749,13 @@ export default function AdminPage() {
                           <span className="badge" style={{ 
                             fontSize: '9px', 
                             padding: '2px 8px', 
-                            background: 'rgba(124, 58, 237, 0.15)', 
-                            color: 'var(--accent-light)',
-                            border: '1px solid rgba(124, 58, 237, 0.3)'
+                            background: 'rgba(0, 240, 255, 0.1)', 
+                            color: '#00f0ff',
+                            border: '1px solid rgba(0, 240, 255, 0.25)'
                           }}>
                             {item.type}
                           </span>
-                          <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                          <span style={{ fontSize: '10px', color: '#9ca3af' }}>
                             {item.source}
                           </span>
                         </div>
@@ -651,7 +765,7 @@ export default function AdminPage() {
                           rel="noopener noreferrer"
                           style={{ 
                             fontSize: '12px', 
-                            color: 'var(--text-primary)', 
+                            color: '#38bdf8', 
                             textDecoration: 'none',
                             wordBreak: 'break-all',
                             fontWeight: 500,
@@ -671,9 +785,9 @@ export default function AdminPage() {
                           padding: '8px 12px',
                           fontSize: '11px',
                           whiteSpace: 'nowrap',
-                          background: isCopied ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-card)',
-                          borderColor: isCopied ? 'var(--success)' : 'var(--border)',
-                          color: isCopied ? 'var(--success)' : 'var(--text-primary)',
+                          background: isCopied ? 'rgba(16, 185, 129, 0.15)' : '#0f172a',
+                          borderColor: isCopied ? '#10b981' : 'rgba(255,255,255,0.05)',
+                          color: isCopied ? '#10b981' : '#f8fafc',
                           cursor: 'pointer',
                           borderRadius: '6px'
                         }}
@@ -689,7 +803,7 @@ export default function AdminPage() {
             <button 
               className="btn-secondary" 
               onClick={() => setSelectedUserUrls(null)} 
-              style={{ width: '100%', padding: '12px' }}
+              style={{ width: '100%', padding: '12px', background: '#1e293b', border: 'none', borderRadius: '8px', color: 'white', fontWeight: 700, cursor: 'pointer' }}
             >
               Close
             </button>
@@ -707,7 +821,7 @@ export default function AdminPage() {
       )}
 
       <div style={{ marginTop: '40px', textAlign: 'center' }}>
-        <Link href="/" style={{ color: 'var(--accent-light)', fontSize: '13px', textDecoration: 'none' }}>
+        <Link href="/" style={{ color: '#00f0ff', fontSize: '13px', textDecoration: 'none', fontWeight: 700 }}>
           ← Back to User Dashboard
         </Link>
       </div>
