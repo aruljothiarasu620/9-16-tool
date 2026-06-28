@@ -99,9 +99,6 @@ export default function Sidebar() {
 
             const allowedNavItems = navItems.filter((item) => {
               if (isSuperAdmin) return true;
-              if (item.href === '/img-to-url') {
-                return userTier === 'lifetime';
-              }
               if (item.href === '/analytics') {
                 return userTier === 'yearly_saver' || userTier === 'lifetime';
               }

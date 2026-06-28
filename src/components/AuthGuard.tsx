@@ -655,19 +655,20 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const userTier = store.tier || 'free';
   const isSuperAdmin = user?.email === 'aruljothiarasu620@gmail.com';
 
-  if (user && !isSuperAdmin) {
-    if (pathname === '/img-to-url') {
-      if (userTier !== 'lifetime') {
-        router.push('/');
-        return null;
+  useEffect(() => {
+    if (user && !isSuperAdmin) {
+      if (pathname === '/analytics') {
+        if (userTier !== 'yearly_saver' && userTier !== 'lifetime') {
+          router.push('/');
+        }
       }
     }
-    if (pathname === '/analytics') {
-      if (userTier !== 'yearly_saver' && userTier !== 'lifetime') {
-        router.push('/');
-        return null;
-      }
-    }
+  }, [user, isSuperAdmin, pathname, userTier, router]);
+
+  const isAnalyticsRestricted = pathname === '/analytics' && userTier !== 'yearly_saver' && userTier !== 'lifetime';
+
+  if (user && !isSuperAdmin && isAnalyticsRestricted) {
+    return null;
   }
 
   return (
