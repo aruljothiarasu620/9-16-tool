@@ -31,6 +31,10 @@ export default function AdminPage() {
   // Analytics modal settings
   const [selectedUserAnalytics, setSelectedUserAnalytics] = useState<any | null>(null);
 
+  // User search & filter state
+  const [userSearch, setUserSearch] = useState('');
+  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'super_admin' | 'lifetime' | 'yearly_saver' | 'free'>('all');
+
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
     setCopiedUrl(url);
@@ -465,6 +469,55 @@ export default function AdminPage() {
           <div style={{ textAlign: 'center', padding: '40px', color: 'var(--accent)' }}>Loading user database...</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
+
+            {/* Search + Filter bar */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+              {/* Search input */}
+              <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
+                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: 'var(--text-muted)' }}>🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search by name or email…"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  style={{
+                    width: '100%', padding: '9px 14px 9px 36px',
+                    background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)',
+                    borderRadius: '8px', color: 'var(--text-primary)', fontSize: '13px',
+                    outline: 'none', boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+              {/* Type filter */}
+              <select
+                value={userTypeFilter}
+                onChange={(e) => setUserTypeFilter(e.target.value as any)}
+                style={{
+                  padding: '9px 14px', background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid var(--border)', borderRadius: '8px',
+                  color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer', outline: 'none'
+                }}
+              >
+                <option value="all">All Types</option>
+                <option value="super_admin">👑 Super Admin</option>
+                <option value="lifetime">⚡ Admin Pro</option>
+                <option value="yearly_saver">🛡️ Admin</option>
+                <option value="free">👤 User</option>
+              </select>
+              {/* Result count */}
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                {(() => {
+                  const filtered = allUsers.filter(u => {
+                    const search = userSearch.toLowerCase();
+                    const matchesSearch = !search || (u.name || '').toLowerCase().includes(search) || (u.email || '').toLowerCase().includes(search);
+                    const type = u.email === 'aruljothiarasu620@gmail.com' ? 'super_admin' : (u.tier === 'lifetime' ? 'lifetime' : u.tier === 'yearly_saver' ? 'yearly_saver' : 'free');
+                    const matchesType = userTypeFilter === 'all' || type === userTypeFilter;
+                    return matchesSearch && matchesType;
+                  });
+                  return `${filtered.length} of ${allUsers.length} users`;
+                })()}
+              </span>
+            </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
                 <tr style={{ borderBottom: '1.5px solid var(--border)', color: 'var(--text-muted)', textAlign: 'left' }}>
@@ -479,14 +532,21 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {allUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
-                      No users found in database yet.
-                    </td>
-                  </tr>
-                ) : (
-                  allUsers.map((u) => {
+                {(() => {
+                    const filteredUsers = allUsers.filter(u => {
+                      const search = userSearch.toLowerCase();
+                      const matchesSearch = !search || (u.name || '').toLowerCase().includes(search) || (u.email || '').toLowerCase().includes(search);
+                      const type = u.email === 'aruljothiarasu620@gmail.com' ? 'super_admin' : (u.tier === 'lifetime' ? 'lifetime' : u.tier === 'yearly_saver' ? 'yearly_saver' : 'free');
+                      const matchesType = userTypeFilter === 'all' || type === userTypeFilter;
+                      return matchesSearch && matchesType;
+                    });
+                    return filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                          {allUsers.length === 0 ? 'No users found in database yet.' : 'No users match your search or filter.'}
+                        </td>
+                      </tr>
+                    ) : filteredUsers.map((u) => {
                     const latestLog = u.runLogs?.[0];
                     return (
                       <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
@@ -644,8 +704,8 @@ export default function AdminPage() {
                         </td>
                       </tr>
                     );
-                  })
-                )}
+                    });
+                  })()}
               </tbody>
             </table>
           </div>

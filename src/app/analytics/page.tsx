@@ -18,7 +18,52 @@ import Link from 'next/link';
 
 export default function AnalyticsPage() {
   const isMobile = useIsMobile();
-  const { runLogs, scenarios, instagramAccounts } = useStore();
+  const store = useStore();
+  const { runLogs, scenarios, instagramAccounts } = store;
+  
+  // Media & Output Links state (Admin Pro only)
+  const [showMediaLinksModal, setShowMediaLinksModal] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  const handleCopyUrl = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    setTimeout(() => setCopiedUrl(null), 2000);
+  };
+
+  const extractUrls = () => {
+    const urls: { source: string; url: string; type: string }[] = [];
+    if (Array.isArray(scenarios)) {
+      scenarios.forEach((scen: any) => {
+        if (scen && Array.isArray(scen.modules)) {
+          scen.modules.forEach((mod: any) => {
+            if (mod && mod.config) {
+              if (typeof mod.config.imageUrl === 'string' && mod.config.imageUrl.trim()) {
+                urls.push({ source: `Scenario: ${scen.name || 'Unnamed'} (${mod.label || 'Unnamed'})`, url: mod.config.imageUrl.trim(), type: 'Configured Image' });
+              }
+              if (Array.isArray(mod.config.images)) {
+                mod.config.images.forEach((img: any, idx: number) => {
+                  if (typeof img === 'string' && img.trim()) {
+                    urls.push({ source: `Scenario: ${scen.name || 'Unnamed'} (${mod.label || 'Unnamed'} - Slide ${idx + 1})`, url: img.trim(), type: 'Configured Image' });
+                  }
+                });
+              }
+            }
+          });
+        }
+      });
+    }
+    if (Array.isArray(runLogs)) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      runLogs.forEach((log: any) => {
+        if (log && typeof log.details === 'string') {
+          const matches = log.details.match(urlRegex);
+          if (matches) matches.forEach((u: string) => urls.push({ source: `Log: ${log.timestamp ? new Date(log.timestamp).toLocaleString() : 'Unknown'}`, url: u, type: 'Execution Output' }));
+        }
+      });
+    }
+    return urls;
+  };
   
   // Real-time fetched state
   const [mediaItems, setMediaItems] = useState<any[]>([]);
@@ -370,21 +415,37 @@ export default function AnalyticsPage() {
           </p>
         </div>
 
-        {/* Date Selector */}
-        <div style={{ 
-          background: 'var(--bg-card)', 
-          border: '1px solid var(--border)', 
-          borderRadius: '8px', 
-          padding: '8px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          color: 'var(--text-primary)',
-          fontSize: '13px',
-          fontWeight: 600
-        }}>
-          <CalendarIcon size={14} style={{ color: 'var(--accent-light)' }} />
-          <span>{dateRange}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {/* Media & Output Links Button - Admin Pro only */}
+          {store.tier === 'lifetime' && (
+            <button
+              onClick={() => setShowMediaLinksModal(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)',
+                borderRadius: '8px', padding: '8px 16px', color: '#3b82f6',
+                fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
+              }}
+            >
+              🔗 Media &amp; Output Links
+            </button>
+          )}
+          {/* Date Selector */}
+          <div style={{ 
+            background: 'var(--bg-card)', 
+            border: '1px solid var(--border)', 
+            borderRadius: '8px', 
+            padding: '8px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: 'var(--text-primary)',
+            fontSize: '13px',
+            fontWeight: 600
+          }}>
+            <CalendarIcon size={14} style={{ color: 'var(--accent-light)' }} />
+            <span>{dateRange}</span>
+          </div>
         </div>
       </div>
 
@@ -762,6 +823,135 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
+
+      {/* Media & Output Links Modal (Admin Pro only) */}
+      {showMediaLinksModal && store.tier === 'lifetime' && (() => {
+        const allUrls = extractUrls();
+        return (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '16px'
+          }} onClick={() => setShowMediaLinksModal(false)}>
+            <div style={{
+              background: 'var(--bg-card)', border: '1.5px solid rgba(59,130,246,0.35)',
+              borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '660px',
+              maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.5)'
+            }} onClick={e => e.stopPropagation()}>
+              {/* Modal Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div>
+                  <h2 style={{ fontWeight: 800, fontSize: '18px', marginBottom: '4px' }}>
+                    🔗 Media &amp; Output Links
+                  </h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>
+                    All processed images and generated output links from your scenarios and run logs.
+                  </p>
+                </div>
+                <button onClick={() => setShowMediaLinksModal(false)} style={{
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)',
+                  borderRadius: '8px', padding: '6px 12px', color: 'var(--text-muted)',
+                  cursor: 'pointer', fontSize: '18px', lineHeight: 1
+                }}>✕</button>
+              </div>
+
+              {/* Badge count */}
+              <div style={{
+                display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap'
+              }}>
+                {['Configured Image', 'Execution Output'].map(type => {
+                  const count = allUrls.filter(u => u.type === type).length;
+                  return (
+                    <span key={type} style={{
+                      background: type === 'Configured Image' ? 'rgba(139,92,246,0.12)' : 'rgba(16,185,129,0.12)',
+                      color: type === 'Configured Image' ? '#8b5cf6' : '#10b981',
+                      border: `1px solid ${type === 'Configured Image' ? 'rgba(139,92,246,0.3)' : 'rgba(16,185,129,0.3)'}`,
+                      borderRadius: '6px', padding: '3px 10px', fontSize: '11px', fontWeight: 700
+                    }}>
+                      {type}: {count}
+                    </span>
+                  );
+                })}
+                <span style={{
+                  background: 'rgba(59,130,246,0.1)', color: '#3b82f6',
+                  border: '1px solid rgba(59,130,246,0.25)',
+                  borderRadius: '6px', padding: '3px 10px', fontSize: '11px', fontWeight: 700
+                }}>Total: {allUrls.length}</span>
+              </div>
+
+              {/* URL List */}
+              <div style={{ overflowY: 'auto', flex: 1 }}>
+                {allUrls.length === 0 ? (
+                  <div style={{
+                    textAlign: 'center', padding: '40px',
+                    color: 'var(--text-muted)', fontSize: '14px'
+                  }}>
+                    <div style={{ fontSize: '36px', marginBottom: '12px' }}>🔍</div>
+                    No media links found yet. Run scenarios or post outputs to see them here.
+                  </div>
+                ) : (
+                  allUrls.map((item, idx) => (
+                    <div key={idx} style={{
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '10px', padding: '12px 14px',
+                      marginBottom: '10px',
+                      display: 'flex', alignItems: 'flex-start', gap: '12px'
+                    }}>
+                      {/* Type badge */}
+                      <span style={{
+                        flexShrink: 0,
+                        background: item.type === 'Configured Image' ? 'rgba(139,92,246,0.1)' : 'rgba(16,185,129,0.1)',
+                        color: item.type === 'Configured Image' ? '#8b5cf6' : '#10b981',
+                        border: `1px solid ${item.type === 'Configured Image' ? 'rgba(139,92,246,0.25)' : 'rgba(16,185,129,0.25)'}`,
+                        borderRadius: '5px', padding: '2px 8px', fontSize: '10px', fontWeight: 700,
+                        marginTop: '2px'
+                      }}>
+                        {item.type === 'Configured Image' ? '🖼 IMG' : '📤 OUT'}
+                      </span>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {item.source}
+                        </div>
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: '12px', color: 'var(--accent-light)',
+                            textDecoration: 'none', wordBreak: 'break-all',
+                            display: 'block'
+                          }}
+                        >
+                          {item.url.length > 70 ? item.url.slice(0, 70) + '…' : item.url}
+                        </a>
+                      </div>
+
+                      <button
+                        onClick={() => handleCopyUrl(item.url)}
+                        style={{
+                          flexShrink: 0,
+                          background: copiedUrl === item.url ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
+                          border: `1px solid ${copiedUrl === item.url ? 'rgba(16,185,129,0.3)' : 'var(--border)'}`,
+                          borderRadius: '6px', padding: '5px 10px',
+                          color: copiedUrl === item.url ? '#10b981' : 'var(--text-muted)',
+                          cursor: 'pointer', fontSize: '11px', fontWeight: 700,
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        {copiedUrl === item.url ? '✓ Copied' : '📋 Copy'}
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Footer */}
       <footer style={{ marginTop: '60px', padding: '24px 0', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
