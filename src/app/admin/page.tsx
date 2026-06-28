@@ -173,18 +173,27 @@ export default function AdminPage() {
 
   const handleUpdateUserTier = async (userId: string, newTier: string) => {
     try {
-      const docRef = doc(db, 'users', userId);
-      await setDoc(docRef, {
-        tier: newTier,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-      alert(`User subscription tier updated successfully to: ${newTier}`);
-      if (user) {
-        fetchAllUsers(user);
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-email': user?.email || '',
+        },
+        body: JSON.stringify({ userId, tier: newTier }),
+      });
+
+      if (res.ok) {
+        alert(`User subscription tier updated successfully to: ${newTier}`);
+        if (user) {
+          fetchAllUsers(user);
+        }
+      } else {
+        const data = await res.json();
+        alert(`Failed to update subscription tier: ${data.error || 'Unknown error'}`);
       }
     } catch (err) {
       console.error('Error updating user tier:', err);
-      alert('Failed to update subscription tier in Firestore.');
+      alert('Failed to update subscription tier.');
     }
   };
 
@@ -460,6 +469,7 @@ export default function AdminPage() {
               <thead>
                 <tr style={{ borderBottom: '1.5px solid var(--border)', color: 'var(--text-muted)', textAlign: 'left' }}>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>User Profile</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 600 }}>Type</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Connected IG Accounts</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>Recent Activity</th>
                   <th style={{ padding: '12px 16px', fontWeight: 600 }}>User Links</th>
@@ -471,7 +481,7 @@ export default function AdminPage() {
               <tbody>
                 {allUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                       No users found in database yet.
                     </td>
                   </tr>
@@ -490,6 +500,36 @@ export default function AdminPage() {
                           <div style={{ color: 'var(--text-muted)', fontSize: '10px', opacity: 0.7 }}>
                             ID: {u.id}
                           </div>
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          {(() => {
+                            if (u.email === 'aruljothiarasu620@gmail.com') {
+                              return (
+                                <span className="badge" style={{ background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.2)', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                                  👑 Super Admin
+                                </span>
+                              );
+                            }
+                            if (u.tier === 'lifetime') {
+                              return (
+                                <span className="badge" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                                  ⚡ Admin Pro
+                                </span>
+                              );
+                            }
+                            if (u.tier === 'yearly_saver') {
+                              return (
+                                <span className="badge" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', border: '1px solid rgba(168, 85, 247, 0.2)', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                                  🛡️ Admin
+                                </span>
+                              );
+                            }
+                            return (
+                              <span className="badge" style={{ background: 'rgba(107, 114, 128, 0.1)', color: '#6b7280', border: '1px solid rgba(107, 114, 128, 0.2)', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                                👤 User
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td style={{ padding: '16px' }}>
                           {Array.isArray(u.instagramAccounts) && u.instagramAccounts.length > 0 ? (

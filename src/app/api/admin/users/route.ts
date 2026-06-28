@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
         instagramAccounts: data.instagramAccounts || [],
         scenarios: data.scenarios || [],
         runLogs: data.runLogs || [],
+        tier: data.tier || 'free',
       });
     });
 
@@ -100,17 +101,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { userId } = await req.json();
+    const { userId, tier } = await req.json();
     if (!userId) {
       return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     }
 
-    // Reset the user's instagramAccounts in Firestore to clean up any leaks
-    await adminDb.collection('users').doc(userId).set({ instagramAccounts: [] }, { merge: true });
+    if (tier !== undefined) {
+      // Safely update user subscription tier from Server-Side Admin SDK
+      await adminDb.collection('users').doc(userId).set({ tier, updatedAt: new Date().toISOString() }, { merge: true });
+    } else {
+      // Reset the user's instagramAccounts in Firestore to clean up any leaks
+      await adminDb.collection('users').doc(userId).set({ instagramAccounts: [] }, { merge: true });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error('Admin reset user accounts error:', err);
+    console.error('Admin user update error:', err);
     return NextResponse.json({ error: 'Internal Server Error', detail: err.message }, { status: 500 });
   }
 }
