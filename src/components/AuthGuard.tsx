@@ -28,6 +28,19 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState('');
   const pathname = usePathname();
   const router = useRouter();
+  const store = useStore();
+  const userTier = store.tier || 'free';
+  const isSuperAdmin = user?.email === 'aruljothiarasu620@gmail.com';
+
+  useEffect(() => {
+    if (user && !isSuperAdmin) {
+      if (pathname === '/analytics') {
+        if (userTier !== 'yearly_saver' && userTier !== 'lifetime') {
+          router.push('/');
+        }
+      }
+    }
+  }, [user, isSuperAdmin, pathname, userTier, router]);
 
   const whatsappWidget = (
     <a 
@@ -650,20 +663,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       </>
     );
   }
-
-  const store = useStore();
-  const userTier = store.tier || 'free';
-  const isSuperAdmin = user?.email === 'aruljothiarasu620@gmail.com';
-
-  useEffect(() => {
-    if (user && !isSuperAdmin) {
-      if (pathname === '/analytics') {
-        if (userTier !== 'yearly_saver' && userTier !== 'lifetime') {
-          router.push('/');
-        }
-      }
-    }
-  }, [user, isSuperAdmin, pathname, userTier, router]);
 
   const isAnalyticsRestricted = pathname === '/analytics' && userTier !== 'yearly_saver' && userTier !== 'lifetime';
 
