@@ -11,6 +11,7 @@ import Sidebar from './Sidebar';
 import MobileHeader from './MobileHeader';
 import MobileBottomNav from './MobileBottomNav';
 import MobileMainWrapper from './MobileMainWrapper';
+import { useIsMobile } from '@/lib/useIsMobile';
 
 const ADMIN_EMAIL = 'aruljothiarasu620@gmail.com';
 const PUBLIC_ROUTES = ['/privacy', '/verified'];
@@ -31,6 +32,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const store = useStore();
   const userTier = store.tier || 'free';
   const isSuperAdmin = user?.email === 'aruljothiarasu620@gmail.com';
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (user && !isSuperAdmin) {
@@ -49,7 +51,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       rel="noopener noreferrer"
       style={{
         position: 'fixed',
-        bottom: '25%',
+        bottom: isMobile ? '45%' : '25%',
         right: '24px',
         background: '#25D366',
         width: '56px',

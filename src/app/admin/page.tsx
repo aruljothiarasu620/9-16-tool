@@ -344,7 +344,7 @@ export default function AdminPage() {
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1.2fr 0.8fr',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '24px',
         alignItems: 'start',
         marginBottom: '40px'
