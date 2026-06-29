@@ -44,12 +44,18 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
   const isMobile = useIsMobile();
   const [showModuleDrawer, setShowModuleDrawer] = useState(false);
   const { scenarios, updateScenario, addModule, updateModule, removeModule, addConnection, removeConnection, addRunLog, instagramAccounts } = useStore();
+  const store = useStore();
+  const userTier = store.tier || 'free';
+  const userCredits = store.credits;
+  const isUnlimited = userTier === 'yearly_saver' || userTier === 'lifetime' || userTier === 'promo_panel';
+  const needsWatermark = userTier === 'free' || userTier === 'monthly' || userTier === 'promo_panel';
   const scenario = scenarios.find((s) => s.id === scenarioId);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [scenarioName, setScenarioName] = useState(scenario?.name || '');
   const [isRunning, setIsRunning] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [logs, setLogs] = useState<{ msg: string; type: string; ts: string }[]>([]);
   const [showLogs, setShowLogs] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -223,10 +229,35 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
 
   const handleRun = async () => {
     if (!scenario) return;
+
+    // --- CREDITS CHECK ---
+    if (!isUnlimited && userCredits <= 0) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    // Helper: apply watermark to an image URL (for free/monthly/promo tiers)
+    const applyWatermark = async (imgUrl: string): Promise<string> => {
+      if (!needsWatermark) return imgUrl;
+      try {
+        const res = await fetch('/api/watermark', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl: imgUrl }),
+        });
+        const data = await res.json();
+        if (data.watermarkedUrl) return data.watermarkedUrl;
+      } catch (e) {
+        console.warn('Watermark failed, using original:', e);
+      }
+      return imgUrl;
+    };
+
     setIsRunning(true);
     setShowLogs(true);
     setLogs([]);
     addLog('▶ Starting scenario execution...', 'info');
+    if (needsWatermark) addLog('💧 Watermark will be applied: fullsizepost.online', 'info');
 
     const executedModules: string[] = [];
     let success = true;
@@ -311,9 +342,13 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
 
         try {
           addLog(`⏳ Uploading image to Instagram...`, 'info');
+
+          // Apply watermark for free/monthly/promo tiers
+          const finalImgUrl = await applyWatermark(imgUrl);
+          if (needsWatermark) addLog(`💧 Watermark applied`, 'info');
           
           // 1. Create Media Container
-          const createRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media?image_url=${encodeURIComponent(imgUrl)}&caption=${encodeURIComponent(caption)}&access_token=${activeAccount.accessToken}`, { method: 'POST' });
+          const createRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media?image_url=${encodeURIComponent(finalImgUrl)}&caption=${encodeURIComponent(caption)}&access_token=${activeAccount.accessToken}`, { method: 'POST' });
           const createData = await createRes.json();
           
           if (createData.error) {
@@ -399,9 +434,11 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
           addLog(`⏳ Uploading ${validImgs.length} images for Carousel...`, 'info');
           const childrenIds = [];
 
-          // 1. Create individual item containers
+          // 1. Create individual item containers (with watermark if needed)
           for (let i = 0; i < validImgs.length; i++) {
-            const itemRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media?image_url=${encodeURIComponent(validImgs[i])}&is_carousel_item=true&access_token=${activeAccount.accessToken}`, { method: 'POST' });
+            const watermarkedImg = await applyWatermark(validImgs[i]);
+            if (needsWatermark) addLog(`💧 Watermark applied to slide ${i + 1}`, 'info');
+            const itemRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media?image_url=${encodeURIComponent(watermarkedImg)}&is_carousel_item=true&access_token=${activeAccount.accessToken}`, { method: 'POST' });
             const itemData = await itemRes.json();
             if (itemData.error) throw new Error(`Image ${i+1}: ${itemData.error.message}`);
             childrenIds.push(itemData.id);
@@ -536,6 +573,27 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
 
     updateScenario(scenarioId, { lastRun: now });
     addLog(success ? '✅ Scenario completed successfully!' : '❌ Scenario failed.', success ? 'success' : 'error');
+
+    // --- DEDUCT CREDIT (for limited tiers) ---
+    if (!isUnlimited) {
+      const newCredits = Math.max(0, userCredits - 1);
+      useStore.setState({ credits: newCredits });
+      // Persist to Firestore
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          await setDoc(doc(db, 'users', user.uid), { credits: newCredits }, { merge: true });
+        }
+      } catch (e) {
+        console.warn('Failed to sync credits to Firestore:', e);
+      }
+      if (newCredits === 0) {
+        addLog(`⚠️ You've used all your credits. Upgrade to continue running.`, 'error');
+      } else {
+        addLog(`🎟️ ${newCredits} credit${newCredits === 1 ? '' : 's'} remaining`, 'info');
+      }
+    }
+
     setIsRunning(false);
   };
 
@@ -602,19 +660,36 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
             }}>
             📋 Logs {logs.length > 0 && `(${logs.length})`}
           </button>
-          <button onClick={handleRun} disabled={isRunning}
+          {/* Credits Badge */}
+          {!isUnlimited && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '4px',
+              background: userCredits === 0 ? 'rgba(239,68,68,0.12)' : 'rgba(99,102,241,0.1)',
+              border: `1px solid ${userCredits === 0 ? 'rgba(239,68,68,0.4)' : 'rgba(99,102,241,0.3)'}`,
+              borderRadius: '8px', padding: '4px 10px',
+              fontSize: '11px', fontWeight: 700,
+              color: userCredits === 0 ? '#ef4444' : 'var(--accent-light)',
+              cursor: userCredits === 0 ? 'pointer' : 'default',
+              flexShrink: 0,
+            }} onClick={() => userCredits === 0 && setShowUpgradeModal(true)}>
+              🎟️ {userCredits} credit{userCredits === 1 ? '' : 's'}
+            </div>
+          )}
+          <button onClick={handleRun} disabled={isRunning || (!isUnlimited && userCredits <= 0)}
             style={{
-              background: isRunning ? 'var(--accent-glow)' : 'linear-gradient(135deg, var(--accent), var(--pink))',
+              background: (!isUnlimited && userCredits <= 0)
+                ? '#6b7280'
+                : isRunning ? 'var(--accent-glow)' : 'linear-gradient(135deg, var(--accent), var(--pink))',
               color: 'white', border: 'none', borderRadius: '8px', 
               padding: isMobile ? '6px 12px' : '8px 18px',
-              cursor: isRunning ? 'not-allowed' : 'pointer',
+              cursor: (isRunning || (!isUnlimited && userCredits <= 0)) ? 'not-allowed' : 'pointer',
               fontWeight: 600, fontSize: '11px',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
               flex: isMobile ? 1 : 'none',
             }}>
             {isRunning ? (
               <><span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⟳</span> Running...</>
-            ) : '▶ Run'}
+            ) : (!isUnlimited && userCredits <= 0) ? '🔒 No Credits' : '▶ Run'}
           </button>
           <button onClick={handleSave} className="btn-secondary" 
             style={{ 
@@ -626,6 +701,52 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
           </button>
         </div>
       </div>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: '20px'
+        }}>
+          <div style={{
+            background: 'var(--bg-card)', border: '1.5px solid var(--border)',
+            borderRadius: '16px', padding: '32px', maxWidth: '380px', width: '100%',
+            textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.4)'
+          }}>
+            <div style={{ fontSize: '40px', marginBottom: '12px' }}>🎟️</div>
+            <h2 style={{ fontWeight: 800, fontSize: '20px', color: 'var(--text-primary)', marginBottom: '8px' }}>
+              Credits Exhausted!
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '24px', lineHeight: 1.6 }}>
+              You've used all your run credits.<br />
+              Upgrade your plan to keep automating.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={() => { setShowUpgradeModal(false); router.push('/#pricing'); }}
+                style={{
+                  background: 'linear-gradient(135deg, var(--accent), var(--pink))',
+                  color: 'white', border: 'none', borderRadius: '10px',
+                  padding: '12px 24px', fontWeight: 700, fontSize: '13px', cursor: 'pointer'
+                }}
+              >
+                🚀 Upgrade Plan
+              </button>
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                style={{
+                  background: 'none', border: '1px solid var(--border)',
+                  borderRadius: '10px', padding: '12px 20px',
+                  color: 'var(--text-muted)', fontSize: '13px', cursor: 'pointer'
+                }}
+              >
+                ✕ Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left sidebar - module list (Desktop only) */}

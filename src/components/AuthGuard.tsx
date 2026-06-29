@@ -177,11 +177,22 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 }
               }
 
+              const loadedTier = data.tier || 'free';
+              // Determine credits: -1 = unlimited
+              const getDefaultCredits = (t: string) => {
+                if (t === 'yearly_saver' || t === 'lifetime' || t === 'promo_panel') return -1;
+                if (t === 'monthly_pro') return 50;
+                if (t === 'monthly') return 20;
+                return 5; // free/trial
+              };
+              const loadedCredits = data.credits !== undefined ? data.credits : getDefaultCredits(loadedTier);
+
               useStore.setState({
                 instagramAccounts: mergedAccounts,
                 scenarios: data.scenarios || [],
                 runLogs: data.runLogs || [],
-                tier: data.tier || 'free',
+                tier: loadedTier,
+                credits: loadedCredits,
               });
             } else {
               // New user — load from their UID-scoped localStorage only
@@ -190,15 +201,34 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 localAccounts = JSON.parse(localStorage.getItem(lsKey(uid)) || '[]');
               } catch (_) {}
               if (localAccounts.length > 0) {
-                useStore.setState({ instagramAccounts: localAccounts, tier: 'free' });
+                useStore.setState({ instagramAccounts: localAccounts, tier: 'free', credits: 5 });
               }
             }
 
             // Save basic profile info for Admin panel
             const { setDoc } = await import('firebase/firestore');
+            const profileData: any = { 
+              email: firebaseUser.email, 
+              name: firebaseUser.displayName || 'Unknown User' 
+            };
+            
+            // If database doc does not contain credits, write the initial default credits
+            const docData = snap.exists() ? snap.data() : null;
+            if (!docData || docData.credits === undefined) {
+              // Determine credits: -1 = unlimited
+              const getDefaultCredits = (t: string) => {
+                if (t === 'yearly_saver' || t === 'lifetime' || t === 'promo_panel') return -1;
+                if (t === 'monthly_pro') return 50;
+                if (t === 'monthly') return 20;
+                return 5; // free/trial
+              };
+              const initialTier = docData?.tier || 'free';
+              profileData.credits = getDefaultCredits(initialTier);
+            }
+
             await setDoc(
               doc(db, 'users', uid),
-              { email: firebaseUser.email, name: firebaseUser.displayName || 'Unknown User' },
+              profileData,
               { merge: true }
             );
           } catch (err) {

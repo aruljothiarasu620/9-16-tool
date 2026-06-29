@@ -73,6 +73,7 @@ interface AppStore {
   settings: AppSettings;
   activeScenarioId: string | null;
   tier?: string;
+  credits: number; // -1 = unlimited
 
   // Scenario actions
   addScenario: (scenario: Scenario) => void;
@@ -167,6 +168,7 @@ export const useStore = create<AppStore>()(
     instagramAccounts: [],
     activeScenarioId: null,
     tier: 'free',
+    credits: 5, // default free tier = 5 credits
     settings: {
       facebookAppId: '2001458060448073',
       facebookAppSecret: 'fff9231ce808e506def32a87c8cef303',

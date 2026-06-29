@@ -310,7 +310,12 @@ function CrossPostingToggles({ config, set }: { config: Record<string, unknown>;
 }
 
 function CarouselConfig({ config, set }: { config: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
-  const images = (config.images as string[]) || [''];
+  const tier = useStore(state => state.tier) || 'free';
+  const maxImages = tier === 'free' ? 3 : (tier === 'monthly' ? 9 : 10);
+  
+  const rawImages = (config.images as string[]) || [''];
+  const images = rawImages.slice(0, maxImages);
+
   const updateImage = (idx: number, val: string) => {
     const next = [...images];
     next[idx] = val;
@@ -319,7 +324,7 @@ function CarouselConfig({ config, set }: { config: Record<string, unknown>; set:
   return (
     <>
       <AccountSelector config={config} set={set} />
-      <Field label={`Images (${images.length}/10)`}>
+      <Field label={`Images (${images.length}/${maxImages})`}>
         {images.map((img, i) => (
           <div key={i} style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
             <input className="input" placeholder={`Image ${i + 1} URL`}
@@ -333,7 +338,7 @@ function CarouselConfig({ config, set }: { config: Record<string, unknown>; set:
             )}
           </div>
         ))}
-        {images.length < 10 && (
+        {images.length < maxImages && (
           <button onClick={() => set('images', [...images, ''])}
             style={{ width: '100%', padding: '8px', background: 'rgba(124,58,237,0.1)', border: '1px dashed var(--accent)', borderRadius: '6px', color: 'var(--accent-light)', cursor: 'pointer', fontSize: '13px' }}>
             + Add Image

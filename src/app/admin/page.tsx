@@ -33,7 +33,7 @@ export default function AdminPage() {
 
   // User search & filter state
   const [userSearch, setUserSearch] = useState('');
-  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'super_admin' | 'lifetime' | 'yearly_saver' | 'free'>('all');
+  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'super_admin' | 'lifetime' | 'yearly_saver' | 'promo_panel' | 'monthly_pro' | 'monthly' | 'free'>('all');
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -176,6 +176,12 @@ export default function AdminPage() {
   };
 
   const handleUpdateUserTier = async (userId: string, newTier: string) => {
+    // Safety guard to protect Super Admin tier
+    const userToUpdate = allUsers.find(u => u.id === userId);
+    if (userToUpdate?.email === 'aruljothiarasu620@gmail.com') {
+      alert("Cannot modify Super Admin's tier!");
+      return;
+    }
     try {
       const res = await fetch('/api/admin/users', {
         method: 'POST',
@@ -502,6 +508,9 @@ export default function AdminPage() {
                 <option value="super_admin">👑 Super Admin</option>
                 <option value="lifetime">⚡ Admin Pro</option>
                 <option value="yearly_saver">🛡️ Admin</option>
+                <option value="promo_panel">📢 Promo Panel</option>
+                <option value="monthly_pro">💼 Monthly Pro</option>
+                <option value="monthly">👤 Monthly</option>
                 <option value="free">👤 User</option>
               </select>
               {/* Result count */}
@@ -510,7 +519,7 @@ export default function AdminPage() {
                   const filtered = allUsers.filter(u => {
                     const search = userSearch.toLowerCase();
                     const matchesSearch = !search || (u.name || '').toLowerCase().includes(search) || (u.email || '').toLowerCase().includes(search);
-                    const type = u.email === 'aruljothiarasu620@gmail.com' ? 'super_admin' : (u.tier === 'lifetime' ? 'lifetime' : u.tier === 'yearly_saver' ? 'yearly_saver' : 'free');
+                    const type = u.email === 'aruljothiarasu620@gmail.com' ? 'super_admin' : (u.tier === 'lifetime' ? 'lifetime' : u.tier === 'yearly_saver' ? 'yearly_saver' : u.tier === 'promo_panel' ? 'promo_panel' : u.tier === 'monthly_pro' ? 'monthly_pro' : u.tier === 'monthly' ? 'monthly' : 'free');
                     const matchesType = userTypeFilter === 'all' || type === userTypeFilter;
                     return matchesSearch && matchesType;
                   });
@@ -536,7 +545,7 @@ export default function AdminPage() {
                     const filteredUsers = allUsers.filter(u => {
                       const search = userSearch.toLowerCase();
                       const matchesSearch = !search || (u.name || '').toLowerCase().includes(search) || (u.email || '').toLowerCase().includes(search);
-                      const type = u.email === 'aruljothiarasu620@gmail.com' ? 'super_admin' : (u.tier === 'lifetime' ? 'lifetime' : u.tier === 'yearly_saver' ? 'yearly_saver' : 'free');
+                      const type = u.email === 'aruljothiarasu620@gmail.com' ? 'super_admin' : (u.tier === 'lifetime' ? 'lifetime' : u.tier === 'yearly_saver' ? 'yearly_saver' : u.tier === 'promo_panel' ? 'promo_panel' : u.tier === 'monthly_pro' ? 'monthly_pro' : u.tier === 'monthly' ? 'monthly' : 'free');
                       const matchesType = userTypeFilter === 'all' || type === userTypeFilter;
                       return matchesSearch && matchesType;
                     });
@@ -581,6 +590,27 @@ export default function AdminPage() {
                               return (
                                 <span className="badge" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', border: '1px solid rgba(168, 85, 247, 0.2)', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                                   🛡️ Admin
+                                </span>
+                              );
+                            }
+                            if (u.tier === 'promo_panel') {
+                              return (
+                                <span className="badge" style={{ background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4', border: '1px solid rgba(6, 182, 212, 0.2)', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                                  📢 Promo Panel
+                                </span>
+                              );
+                            }
+                            if (u.tier === 'monthly_pro') {
+                              return (
+                                <span className="badge" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                                  💼 Monthly Pro
+                                </span>
+                              );
+                            }
+                            if (u.tier === 'monthly') {
+                              return (
+                                <span className="badge" style={{ background: 'rgba(75, 85, 99, 0.1)', color: '#4b5563', border: '1px solid rgba(75, 85, 99, 0.2)', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                                  👤 Monthly
                                 </span>
                               );
                             }
@@ -660,24 +690,33 @@ export default function AdminPage() {
                         </td>
                         <td style={{ padding: '16px' }}>
                           <select
-                            value={u.tier || 'free'}
+                            value={u.email === 'aruljothiarasu620@gmail.com' ? 'super_admin' : (u.tier || 'free')}
+                            disabled={u.email === 'aruljothiarasu620@gmail.com'}
                             onChange={(e) => handleUpdateUserTier(u.id, e.target.value)}
                             style={{
                               padding: '6px 10px',
                               fontSize: '12px',
-                              background: 'var(--bg-primary)',
-                              color: 'var(--text-primary)',
-                              border: '1px solid var(--border)',
+                              background: u.email === 'aruljothiarasu620@gmail.com' ? 'rgba(234, 179, 8, 0.1)' : 'var(--bg-primary)',
+                              color: u.email === 'aruljothiarasu620@gmail.com' ? '#eab308' : 'var(--text-primary)',
+                              border: u.email === 'aruljothiarasu620@gmail.com' ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid var(--border)',
                               borderRadius: '6px',
                               fontWeight: 700,
-                              cursor: 'pointer',
+                              cursor: u.email === 'aruljothiarasu620@gmail.com' ? 'not-allowed' : 'pointer',
                               outline: 'none'
                             }}
                           >
-                            <option value="free">7-Day Trial (₹0)</option>
-                            <option value="monthly_pro">Monthly Pro (₹29)</option>
-                            <option value="yearly_saver">Admin Panel (Yearly)</option>
-                            <option value="lifetime">Admin Pro (One-Time)</option>
+                            {u.email === 'aruljothiarasu620@gmail.com' ? (
+                              <option value="super_admin">👑 Super Admin</option>
+                            ) : (
+                              <>
+                                <option value="free">7-Day Trial (₹0)</option>
+                                <option value="monthly">Monthly (₹29)</option>
+                                <option value="monthly_pro">Monthly Pro (₹49)</option>
+                                <option value="promo_panel">Promo Panel (Yearly+WM)</option>
+                                <option value="yearly_saver">Admin Panel (Yearly)</option>
+                                <option value="lifetime">Admin Pro (One-Time)</option>
+                              </>
+                            )}
                           </select>
                         </td>
                         <td style={{ padding: '16px' }}>

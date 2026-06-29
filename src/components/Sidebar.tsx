@@ -187,6 +187,26 @@ export default function Sidebar() {
             ) : (
               <div style={{ marginBottom: '8px' }}>No account</div>
             )}
+            {/* Credits Badge */}
+            {(() => {
+              const tier = store.tier || 'free';
+              const isUnlimited = tier === 'yearly_saver' || tier === 'lifetime' || tier === 'promo_panel';
+              if (isUnlimited) return (
+                <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--success)', fontWeight: 700, fontSize: '11px' }}>
+                  🎟️ <span>Unlimited Runs</span>
+                </div>
+              );
+              const credits = store.credits ?? 5;
+              return (
+                <div style={{
+                  marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px',
+                  color: credits === 0 ? '#ef4444' : 'var(--accent-light)',
+                  fontWeight: 700, fontSize: '11px'
+                }}>
+                  🎟️ <span>{credits} credit{credits === 1 ? '' : 's'} left</span>
+                </div>
+              );
+            })()}
             <Link href="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none', opacity: 0.7, fontSize: '11px' }}>
               Privacy Policy
             </Link>

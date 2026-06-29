@@ -98,31 +98,29 @@ export default function LandingPage({ handleLogin, signingIn, error }: LandingPa
 
   const plans = [
     {
-      name: '7-Day Free Trial',
-      price: '₹0',
-      period: '7 days',
-      trial: '₹0 Trial',
-      features: [
-        '1 Connected Instagram Account',
-        '2 Automation Scenarios',
-        '1 Image per Post limit',
-        'Includes Auto-Promotion ad slide',
-        'Standard execution queues',
-      ],
-      cta: 'Start 7-Day Free Trial',
-      popular: false,
-      glow: false,
-    },
-    {
-      name: 'Monthly Pro',
+      name: 'Monthly',
       price: '₹29',
       period: 'month',
       trial: 'Standard Pack',
       features: [
         'Up to 3 Connected Accounts',
-        '10 Automation Scenarios',
         '9 Images per Post limit',
         'Includes Auto-Promotion ad slide',
+        'Priority execution queues',
+      ],
+      cta: 'Go Monthly',
+      popular: false,
+      glow: false,
+    },
+    {
+      name: 'Monthly Pro',
+      price: '₹49',
+      period: 'month',
+      trial: 'Premium Pack',
+      features: [
+        'Up to 3 Connected Accounts',
+        '10 Images per Post limit',
+        'No watermark / Ad-free posts',
         'Priority execution queues',
       ],
       cta: 'Go Pro Monthly',
@@ -136,7 +134,6 @@ export default function LandingPage({ handleLogin, signingIn, error }: LandingPa
       trial: 'Save 40%',
       features: [
         'Up to 5 Connected Accounts',
-        'Unlimited Scenarios',
         'Actionable Performance Analytics',
         'No watermark / Ad-free posts',
         'Instant 2x faster auto-runs',
@@ -152,7 +149,6 @@ export default function LandingPage({ handleLogin, signingIn, error }: LandingPa
       trial: 'Best Value',
       features: [
         'Unlimited Connected Accounts',
-        'Unlimited Scenarios',
         'Actionable Performance Analytics',
         'Media & Output Links',
         'No watermark / Ad-free posts',
