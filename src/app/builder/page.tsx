@@ -49,6 +49,8 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
   const userCredits = store.credits;
   const isUnlimited = userTier === 'yearly_saver' || userTier === 'lifetime' || userTier === 'promo_panel';
   const needsWatermark = userTier === 'free' || userTier === 'monthly' || userTier === 'promo_panel';
+  const isSuperAdminUser = auth.currentUser?.email === 'aruljothiarasu620@gmail.com';
+  const [superAdminForceWatermark, setSuperAdminForceWatermark] = useState(false);
   const scenario = scenarios.find((s) => s.id === scenarioId);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -236,9 +238,11 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
       return;
     }
 
-    // Helper: apply watermark to an image URL (for free/monthly/promo tiers)
+    const shouldApplyWatermark = needsWatermark || (isSuperAdminUser && superAdminForceWatermark);
+
+    // Helper: apply watermark to an image URL (for free/monthly/promo tiers or forced by Super Admin)
     const applyWatermark = async (imgUrl: string): Promise<string> => {
-      if (!needsWatermark) return imgUrl;
+      if (!shouldApplyWatermark) return imgUrl;
       try {
         const res = await fetch('/api/watermark', {
           method: 'POST',
@@ -257,7 +261,7 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
     setShowLogs(true);
     setLogs([]);
     addLog('▶ Starting scenario execution...', 'info');
-    if (needsWatermark) addLog('💧 Watermark will be applied: fullsizepost.online', 'info');
+    if (shouldApplyWatermark) addLog('💧 Watermark will be applied: fullsizepost.online', 'info');
 
     const executedModules: string[] = [];
     let success = true;
@@ -345,7 +349,7 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
 
           // Apply watermark for free/monthly/promo tiers
           const finalImgUrl = await applyWatermark(imgUrl);
-          if (needsWatermark) addLog(`💧 Watermark applied`, 'info');
+          if (shouldApplyWatermark) addLog(`💧 Watermark applied`, 'info');
           
           // 1. Create Media Container
           const createRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media?image_url=${encodeURIComponent(finalImgUrl)}&caption=${encodeURIComponent(caption)}&access_token=${activeAccount.accessToken}`, { method: 'POST' });
@@ -437,7 +441,7 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
           // 1. Create individual item containers (with watermark if needed)
           for (let i = 0; i < validImgs.length; i++) {
             const watermarkedImg = await applyWatermark(validImgs[i]);
-            if (needsWatermark) addLog(`💧 Watermark applied to slide ${i + 1}`, 'info');
+            if (shouldApplyWatermark) addLog(`💧 Watermark applied to slide ${i + 1}`, 'info');
             const itemRes = await fetch(`https://graph.facebook.com/v18.0/${activeAccount.pageId}/media?image_url=${encodeURIComponent(watermarkedImg)}&is_carousel_item=true&access_token=${activeAccount.accessToken}`, { method: 'POST' });
             const itemData = await itemRes.json();
             if (itemData.error) throw new Error(`Image ${i+1}: ${itemData.error.message}`);
@@ -674,6 +678,28 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
             }} onClick={() => userCredits === 0 && setShowUpgradeModal(true)}>
               🎟️ {userCredits} credit{userCredits === 1 ? '' : 's'}
             </div>
+          )}
+          {/* Super Admin Watermark Test Toggle */}
+          {isSuperAdminUser && (
+            <label style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              fontSize: '11px', fontWeight: 700,
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid var(--border)',
+              borderRadius: '8px', padding: '6px 12px',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              userSelect: 'none',
+              flexShrink: 0
+            }}>
+              <input 
+                type="checkbox" 
+                checked={superAdminForceWatermark}
+                onChange={(e) => setSuperAdminForceWatermark(e.target.checked)}
+                style={{ cursor: 'pointer', accentColor: 'var(--accent)' }}
+              />
+              💧 Watermark Test: {superAdminForceWatermark ? 'ON' : 'OFF'}
+            </label>
           )}
           <button onClick={handleRun} disabled={isRunning || (!isUnlimited && userCredits <= 0)}
             style={{
