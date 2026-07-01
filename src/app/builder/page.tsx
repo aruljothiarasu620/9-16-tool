@@ -244,7 +244,7 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
     const applyWatermark = async (imgUrl: string): Promise<string> => {
       if (!shouldApplyWatermark) return imgUrl;
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://fullsizepost.online';
-      return `${origin}/api/watermark?imageUrl=${encodeURIComponent(imgUrl)}`;
+      return `${origin}/api/watermark/image.jpg?imageUrl=${encodeURIComponent(imgUrl)}`;
     };
 
     setIsRunning(true);
