@@ -47,12 +47,22 @@ export async function GET(req: NextRequest) {
       return new Response('imageUrl query parameter is required', { status: 400 });
     }
 
-    const imgRes = await fetch(imageUrl);
+    console.log(`Watermark GET triggered for URL: ${imageUrl}`);
+    const imgRes = await fetch(imageUrl, { cache: 'no-store' });
+    
+    console.log(`Fetch status: ${imgRes.status}, Content-Type: ${imgRes.headers.get('content-type')}`);
     if (!imgRes.ok) {
-      return new Response('Failed to fetch source image', { status: 400 });
+      return new Response(`Failed to fetch source image (status ${imgRes.status})`, { status: 400 });
     }
 
-    const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
+    const arrayBuffer = await imgRes.arrayBuffer();
+    const imgBuffer = Buffer.from(arrayBuffer);
+    console.log(`Fetched image buffer length: ${imgBuffer.length} bytes`);
+
+    if (imgBuffer.length === 0) {
+      return new Response('Fetched image buffer is empty', { status: 400 });
+    }
+
     const watermarkedBuffer = await addWatermark(imgBuffer);
 
     return new Response(new Uint8Array(watermarkedBuffer), {
@@ -76,9 +86,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'imageUrl is required' }, { status: 400 });
     }
 
-    const imgRes = await fetch(imageUrl);
+    const imgRes = await fetch(imageUrl, { cache: 'no-store' });
     if (!imgRes.ok) {
-      return NextResponse.json({ error: 'Failed to fetch image' }, { status: 400 });
+      return NextResponse.json({ error: `Failed to fetch image: status ${imgRes.status}` }, { status: 400 });
     }
 
     const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
