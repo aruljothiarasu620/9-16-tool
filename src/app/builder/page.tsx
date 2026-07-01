@@ -243,18 +243,8 @@ function BuilderCanvas({ scenarioId }: { scenarioId: string }) {
     // Helper: apply watermark to an image URL (for free/monthly/promo tiers or forced by Super Admin)
     const applyWatermark = async (imgUrl: string): Promise<string> => {
       if (!shouldApplyWatermark) return imgUrl;
-      try {
-        const res = await fetch('/api/watermark', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageUrl: imgUrl }),
-        });
-        const data = await res.json();
-        if (data.watermarkedUrl) return data.watermarkedUrl;
-      } catch (e) {
-        console.warn('Watermark failed, using original:', e);
-      }
-      return imgUrl;
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://fullsizepost.online';
+      return `${origin}/api/watermark?imageUrl=${encodeURIComponent(imgUrl)}`;
     };
 
     setIsRunning(true);
