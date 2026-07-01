@@ -14,7 +14,17 @@ async function addWatermark(imgBuffer: Buffer): Promise<Buffer> {
   const wmHeight = Math.round(wmWidth * (44 / 380));
 
   const wmPath = path.join(process.cwd(), 'public', 'watermark.png');
+  
+  if (!fs.existsSync(wmPath)) {
+    throw new Error(`Watermark file not found at path: ${wmPath}`);
+  }
+  
   const watermarkPngBuffer = fs.readFileSync(wmPath);
+  console.log(`Loaded watermark PNG from ${wmPath}: ${watermarkPngBuffer.length} bytes`);
+  
+  if (watermarkPngBuffer.length === 0) {
+    throw new Error(`Watermark file at ${wmPath} is empty`);
+  }
   
   // Resize the watermark overlay dynamically
   const resizedWatermark = await sharp(watermarkPngBuffer)
@@ -40,6 +50,7 @@ async function addWatermark(imgBuffer: Buffer): Promise<Buffer> {
 
 // GET method: Serves the binary image directly. Meta/Instagram fetches from this URL.
 export async function GET(req: NextRequest) {
+  let debugInfo: any = {};
   try {
     const imageUrl = req.nextUrl.searchParams.get('imageUrl');
 
@@ -47,8 +58,12 @@ export async function GET(req: NextRequest) {
       return new Response('imageUrl query parameter is required', { status: 400 });
     }
 
+    debugInfo.imageUrl = imageUrl;
     console.log(`Watermark GET triggered for URL: ${imageUrl}`);
     const imgRes = await fetch(imageUrl, { cache: 'no-store' });
+    
+    debugInfo.fetchStatus = imgRes.status;
+    debugInfo.contentType = imgRes.headers.get('content-type');
     
     console.log(`Fetch status: ${imgRes.status}, Content-Type: ${imgRes.headers.get('content-type')}`);
     if (!imgRes.ok) {
@@ -57,10 +72,19 @@ export async function GET(req: NextRequest) {
 
     const arrayBuffer = await imgRes.arrayBuffer();
     const imgBuffer = Buffer.from(arrayBuffer);
+    debugInfo.imgBufferLength = imgBuffer.length;
     console.log(`Fetched image buffer length: ${imgBuffer.length} bytes`);
 
     if (imgBuffer.length === 0) {
       return new Response('Fetched image buffer is empty', { status: 400 });
+    }
+
+    // Diagnostic filesystem check
+    const wmPath = path.join(process.cwd(), 'public', 'watermark.png');
+    debugInfo.wmPath = wmPath;
+    debugInfo.wmExists = fs.existsSync(wmPath);
+    if (debugInfo.wmExists) {
+      debugInfo.wmSize = fs.statSync(wmPath).size;
     }
 
     const watermarkedBuffer = await addWatermark(imgBuffer);
@@ -73,7 +97,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (err: any) {
     console.error('Watermark GET API error:', err);
-    return new Response(err.message || 'Watermark rendering failed', { status: 500 });
+    return new Response(
+      `Watermark rendering failed: ${err.message}\n\nStack:\n${err.stack}\n\nDebug Info:\n${JSON.stringify(debugInfo, null, 2)}`, 
+      { status: 500 }
+    );
   }
 }
 
